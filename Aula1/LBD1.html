@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR"> <head> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>Aula 01: Laboratório de SQL - TechStore</title> <script src="https://cdn.tailwindcss.com"></script> <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <style> @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+    body {
+        font-family: 'Inter', sans-serif;
+        background-color: #FAFAF9; /* Stone 50 */
+        color: #44403C; /* Stone 700 */
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+        width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+        background: #E7E5E4; 
+    }
+    ::-webkit-scrollbar-thumb {
+        background: #A8A29E; 
+        border-radius: 4px;
+    }
+
+    /* Chart Container Styling */
+    .chart-container {
+        position: relative;
+        width: 100%;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+        height: 300px;
+        max-height: 400px;
+        background-color: white;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    }
+
+    @media (min-width: 768px) {
+        .chart-container {
+            height: 350px;
+        }
+    }
+
+    /* Utility for code blocks */
+    .code-block {
+        font-family: 'Courier New', Courier, monospace;
+        background-color: #292524;
+        color: #A3E635;
+        padding: 0.2rem 0.4rem;
+        border-radius: 0.25rem;
+        font-size: 0.875rem;
+    }
+
+    .btn-interactive {
+        transition: all 0.2s;
+    }
+    .btn-interactive:active {
+        transform: scale(0.95);
+    }
+    
+    /* Table Styles */
+    .data-table th {
+        background-color: #F5F5F4;
+        color: #57534E;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        padding: 0.75rem;
+        text-align: left;
+    }
+    .data-table td {
+        padding: 0.75rem;
+        border-bottom: 1px solid #E7E5E4;
+        font-size: 0.875rem;
+    }
+    .data-table tr:last-child td {
+        border-bottom: none;
+    }
+</style>
+</head> <body class="antialiased">
+
+<!-- Navigation -->
+<nav class="bg-white border-b border-stone-200 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+            <div class="flex items-center">
+                <span class="text-2xl font-bold text-teal-700 mr-2">SQL</span>
+                <span class="text-lg font-light text-stone-500">Labs | Aula 01</span>
+            </div>
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="#theory" class="text-stone-600 hover:text-teal-600 font-medium transition">Teoria</a>
+                <a href="#commands" class="text-stone-600 hover:text-teal-600 font-medium transition">DDL vs DML</a>
+                <a href="#simulator" class="text-stone-600 hover:text-teal-600 font-medium transition">Simulador TechStore</a>
+                <a href="#safety" class="text-stone-600 hover:text-red-600 font-medium transition">Zona de Perigo</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Hero Section -->
+<div class="bg-stone-100 border-b border-stone-200">
+    <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between">
+        <div class="md:w-2/3">
+            <h1 class="text-4xl font-bold text-stone-800 tracking-tight mb-4">Revisão de Linguagem SQL</h1>
+            <p class="text-xl text-stone-600 mb-6">
+                Mergulhe nos fundamentos de Bancos de Dados Relacionais. Entenda a distinção entre estrutura (DDL) e manipulação (DML) através de um laboratório prático interativo.
+            </p>
+            <div class="flex flex-wrap gap-4">
+                <div class="flex items-center bg-white px-4 py-2 rounded-lg shadow-sm">
+                    <span class="text-teal-600 text-xl mr-2">🏫</span>
+                    <span class="text-sm font-semibold text-stone-600">Fatec Garça</span>
+                </div>
+                <div class="flex items-center bg-white px-4 py-2 rounded-lg shadow-sm">
+                    <span class="text-teal-600 text-xl mr-2">👨‍🏫</span>
+                    <span class="text-sm font-semibold text-stone-600">Prof. Ferdinando Paes</span>
+                </div>
+                <div class="flex items-center bg-white px-4 py-2 rounded-lg shadow-sm">
+                    <span class="text-teal-600 text-xl mr-2">⏱️</span>
+                    <span class="text-sm font-semibold text-stone-600">02 Horas</span>
+                </div>
+            </div>
+        </div>
+        <div class="md:w-1/3 mt-8 md:mt-0 flex justify-center">
+            <div class="chart-container bg-white rounded-xl shadow-lg border border-stone-100">
+                <canvas id="introChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Section: Theory Hub -->
+<section id="theory" class="max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-12">
+        <h2 class="text-3xl font-bold text-stone-800">Fundamentação Teórica</h2>
+        <p class="mt-4 text-lg text-stone-600 max-w-2xl mx-auto">
+            Antes de escrevermos código, precisamos entender a natureza da ferramenta. SQL não é apenas sobre comandos; é sobre declaração e estrutura.
+        </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- Concept 1 -->
+        <div class="bg-white rounded-xl p-8 shadow-sm border border-stone-200 hover:shadow-md transition">
+            <div class="flex items-center mb-4">
+                <span class="bg-teal-100 text-teal-700 p-3 rounded-full text-2xl mr-4">🗣️</span>
+                <h3 class="text-xl font-bold text-stone-800">Natureza Declarativa</h3>
+            </div>
+            <p class="text-stone-600 leading-relaxed">
+                SQL é uma linguagem <strong>declarativa</strong>. Diferente de Java ou C (procedurais), você diz ao banco <em>o que</em> quer ("Busque os clientes"), e o SGBD decide <em>como</em> buscar (otimização).
+            </p>
+        </div>
+
+        <!-- Concept 2 -->
+        <div class="bg-white rounded-xl p-8 shadow-sm border border-stone-200 hover:shadow-md transition">
+            <div class="flex items-center mb-4">
+                <span class="bg-orange-100 text-orange-700 p-3 rounded-full text-2xl mr-4">🛠️</span>
+                <h3 class="text-xl font-bold text-stone-800">SQL vs. MySQL</h3>
+            </div>
+            <p class="text-stone-600 leading-relaxed">
+                Não confunda a linguagem com a ferramenta.
+                <br><br>
+                <strong>SQL:</strong> O padrão ANSI/ISO (o idioma).<br>
+                <strong>MySQL:</strong> O software SGBD que entende e executa o idioma.
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- Section: DDL vs DML -->
+<section id="commands" class="bg-stone-100 py-16 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto">
+        <div class="mb-10">
+            <h2 class="text-3xl font-bold text-stone-800">Taxonomia dos Comandos</h2>
+            <p class="mt-2 text-stone-600">Entenda a diferença crucial entre definir a casa (Estrutura) e mobiliar a casa (Dados).</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            <!-- DDL Column -->
+            <div class="bg-white rounded-xl shadow-sm border-t-4 border-teal-500 p-6">
+                <h3 class="text-2xl font-bold text-teal-700 mb-4">DDL - Data Definition Language</h3>
+                <p class="text-sm text-stone-500 mb-6 uppercase tracking-wide">Gerencia a Estrutura (Metadados)</p>
+                
+                <ul class="space-y-4">
+                    <li class="flex items-start">
+                        <span class="code-block mr-3">CREATE</span>
+                        <span class="text-stone-600">Cria objetos como tabelas, views e índices.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="code-block mr-3">ALTER</span>
+                        <span class="text-stone-600">Modifica estruturas existentes (add colunas).</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="code-block mr-3">DROP</span>
+                        <span class="text-stone-600">Destrói estruturas inteiras (irreversível).</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- DML Column -->
+            <div class="bg-white rounded-xl shadow-sm border-t-4 border-orange-500 p-6">
+                <h3 class="text-2xl font-bold text-orange-700 mb-4">DML - Data Manipulation Language</h3>
+                <p class="text-sm text-stone-500 mb-6 uppercase tracking-wide">Gerencia as Instâncias (Linhas)</p>
+                
+                <ul class="space-y-4">
+                    <li class="flex items-start">
+                        <span class="code-block mr-3">INSERT</span>
+                        <span class="text-stone-600">Adiciona novos registros na tabela.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="code-block mr-3">SELECT</span>
+                        <span class="text-stone-600">Recupera e filtra dados (o coração do SQL).</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="code-block mr-3">UPDATE</span>
+                        <span class="text-stone-600">Atualiza dados existentes.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="code-block mr-3">DELETE</span>
+                        <span class="text-stone-600">Remove registros específicos.</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Section: TechStore Simulator -->
+<section id="simulator" class="max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
+    <div class="mb-8">
+        <h2 class="text-3xl font-bold text-stone-800">Laboratório Prático: TechStore</h2>
+        <p class="mt-4 text-stone-600">
+            Neste cenário, estamos gerenciando o banco de dados de um e-commerce. Use o painel de controle à esquerda para executar os scripts da aula e veja a tabela e os gráficos reagirem em tempo real.
+        </p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- Left: Control Panel -->
+        <div class="lg:col-span-1 space-y-6">
+            <!-- Step 1: DDL -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+                <h4 class="text-lg font-bold text-stone-800 mb-4 flex items-center">
+                    <span class="bg-stone-200 text-stone-700 rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2">1</span>
+                    Definição (DDL)
+                </h4>
+                <p class="text-sm text-stone-500 mb-4">Inicialize a estrutura da tabela Produtos.</p>
+                <button id="btn-create" onclick="simCreate()" class="btn-interactive w-full bg-teal-600 hover:bg-teal-700 text-white font-medium py-2 px-4 rounded mb-2 text-left flex justify-between items-center">
+                    <span>Executar CREATE TABLE</span>
+                    <span class="text-xs opacity-75">DDL</span>
+                </button>
+                <button id="btn-alter" onclick="simAlter()" disabled class="btn-interactive w-full bg-stone-300 text-white font-medium py-2 px-4 rounded text-left flex justify-between items-center cursor-not-allowed">
+                    <span>Executar ALTER TABLE</span>
+                    <span class="text-xs opacity-75">DDL</span>
+                </button>
+                <p id="ddl-status" class="text-xs text-stone-400 mt-2 italic">Aguardando criação...</p>
+            </div>
+
+            <!-- Step 2: DML -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+                <h4 class="text-lg font-bold text-stone-800 mb-4 flex items-center">
+                    <span class="bg-stone-200 text-stone-700 rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2">2</span>
+                    Manipulação (DML)
+                </h4>
+                <div class="space-y-3">
+                    <button id="btn-insert" onclick="simInsert()" disabled class="btn-interactive w-full bg-stone-300 text-white font-medium py-2 px-4 rounded text-left flex justify-between items-center cursor-not-allowed">
+                        <span>INSERT Dados Iniciais</span>
+                        <span class="text-xs opacity-75">Populate</span>
+                    </button>
+                    <button id="btn-update" onclick="simUpdate()" disabled class="btn-interactive w-full bg-stone-300 text-white font-medium py-2 px-4 rounded text-left flex justify-between items-center cursor-not-allowed">
+                        <span>UPDATE Preço (+10%)</span>
+                        <span class="text-xs opacity-75">Periféricos</span>
+                    </button>
+                     <button id="btn-insert-extra" onclick="simInsertExtra()" disabled class="btn-interactive w-full bg-stone-300 text-white font-medium py-2 px-4 rounded text-left flex justify-between items-center cursor-not-allowed">
+                        <span>INSERT Novo Produto</span>
+                        <span class="text-xs opacity-75">Headset</span>
+                    </button>
+                    <button id="btn-delete" onclick="simDelete()" disabled class="btn-interactive w-full bg-stone-300 text-white font-medium py-2 px-4 rounded text-left flex justify-between items-center cursor-not-allowed">
+                        <span>DELETE Produto ID 2</span>
+                        <span class="text-xs opacity-75">Mouse</span>
+                    </button>
+                </div>
+            </div>
+             <button onclick="resetSim()" class="w-full border border-stone-300 text-stone-500 hover:bg-stone-100 font-medium py-2 px-4 rounded transition">
+                Reiniciar Laboratório
+            </button>
+        </div>
+
+        <!-- Right: Visualization -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Virtual Table -->
+            <div class="bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden">
+                <div class="bg-stone-50 px-6 py-3 border-b border-stone-200 flex justify-between items-center">
+                    <h4 class="font-bold text-stone-700">Tabela: produtos</h4>
+                    <span id="row-count" class="text-xs font-mono bg-stone-200 px-2 py-1 rounded text-stone-600">0 rows</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full data-table text-left border-collapse">
+                        <thead>
+                            <tr id="table-header">
+                                <!-- Headers injected via JS based on schema state -->
+                                <th class="p-3 text-sm text-stone-400 italic font-light">Tabela não criada</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body">
+                            <!-- Data injected via JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="table-msg" class="p-6 text-center text-stone-400 text-sm">
+                    Execute 'CREATE TABLE' para começar.
+                </div>
+            </div>
+
+            <!-- Charts Area -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Inventory Bar Chart -->
+                <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-4">
+                    <h5 class="text-sm font-bold text-stone-600 mb-2">Níveis de Estoque</h5>
+                    <div class="chart-container" style="height: 200px;">
+                        <canvas id="stockChart"></canvas>
+                    </div>
+                </div>
+                <!-- Price Scatter Chart -->
+                <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-4">
+                    <h5 class="text-sm font-bold text-stone-600 mb-2">Análise de Preço (R$)</h5>
+                    <div class="chart-container" style="height: 200px;">
+                        <canvas id="priceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Feedback Console -->
+            <div class="bg-stone-900 rounded-lg p-4 font-mono text-sm shadow-inner h-32 overflow-y-auto">
+                <div class="text-stone-500 border-b border-stone-700 pb-1 mb-2">Terminal SQL (Log)</div>
+                <div id="sql-log" class="flex flex-col space-y-1">
+                    <!-- Logs go here -->
+                    <span class="text-stone-500">> Aguardando comandos...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Section: Danger Zone -->
+<section id="safety" class="bg-red-50 border-y border-red-100 py-16 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto">
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between mb-8">
+            <div>
+                <h2 class="text-3xl font-bold text-red-800 flex items-center">
+                    <span class="text-4xl mr-3">⚠️</span> Zona de Perigo: O Esquecimento do WHERE
+                </h2>
+                <p class="mt-2 text-red-700">
+                    Um dos erros mais comuns e catastróficos. Tente deletar dados com e sem a cláusula de segurança.
+                </p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg border border-red-200 overflow-hidden flex flex-col md:flex-row">
+            <!-- Controls -->
+            <div class="p-8 md:w-1/2 border-r border-red-100">
+                <div class="mb-6">
+                    <label class="flex items-center space-x-3 cursor-pointer">
+                        <input type="checkbox" id="where-toggle" class="form-checkbox h-6 w-6 text-green-600 rounded focus:ring-green-500" checked onchange="toggleSafety()">
+                        <span class="text-lg font-medium text-stone-700">Incluir cláusula WHERE (Seguro)</span>
+                    </label>
+                </div>
+                
+                <div class="bg-stone-800 rounded p-4 mb-6">
+                    <code class="text-green-400 font-mono text-sm block" id="safety-code">
+                        DELETE FROM produtos WHERE id = 5;
+                    </code>
+                </div>
+
+                <button onclick="executeDanger()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded shadow transition flex justify-center items-center">
+                    <span class="mr-2">💣</span> Executar Comando
+                </button>
+                <p id="danger-result" class="mt-4 text-center font-bold text-stone-600 h-6"></p>
+            </div>
+
+            <!-- Visualizer -->
+            <div class="p-8 md:w-1/2 bg-stone-50 flex flex-col justify-center items-center">
+                 <h4 class="text-stone-500 font-bold mb-4 uppercase text-sm tracking-widest">Estado da Tabela</h4>
+                 <div id="danger-grid" class="grid grid-cols-5 gap-2">
+                     <!-- Blocks generated by JS -->
+                 </div>
+                 <p class="text-xs text-stone-400 mt-4">Cada quadrado representa um registro.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Section: Checklist & Exercises -->
+<section class="max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+        <!-- Checklist -->
+        <div>
+            <h3 class="text-2xl font-bold text-stone-800 mb-6">Checklist de Aprendizado</h3>
+            <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-6 space-y-4">
+                <label class="flex items-start space-x-3">
+                    <input type="checkbox" class="mt-1 h-5 w-5 text-teal-600 rounded border-stone-300 focus:ring-teal-500">
+                    <span class="text-stone-700">Consigo criar um banco de dados e tabelas do zero?</span>
+                </label>
+                <label class="flex items-start space-x-3">
+                    <input type="checkbox" class="mt-1 h-5 w-5 text-teal-600 rounded border-stone-300 focus:ring-teal-500">
+                    <span class="text-stone-700">Entendo a diferença entre DROP (estrutura) e DELETE (dados)?</span>
+                </label>
+                <label class="flex items-start space-x-3">
+                    <input type="checkbox" class="mt-1 h-5 w-5 text-teal-600 rounded border-stone-300 focus:ring-teal-500">
+                    <span class="text-stone-700">Sei usar WHERE para evitar desastres?</span>
+                </label>
+                <label class="flex items-start space-x-3">
+                    <input type="checkbox" class="mt-1 h-5 w-5 text-teal-600 rounded border-stone-300 focus:ring-teal-500">
+                    <span class="text-stone-700">Compreendo PK (Primary Key) e FK (Foreign Key)?</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Exercises -->
+        <div>
+            <h3 class="text-2xl font-bold text-stone-800 mb-6">Exercícios Práticos</h3>
+            <div class="bg-white rounded-xl shadow-sm border border-stone-200 divide-y divide-stone-100">
+                <details class="group p-4">
+                    <summary class="flex justify-between items-center font-medium cursor-pointer list-none text-stone-700">
+                        <span>Nível Básico</span>
+                        <span class="transition group-open:rotate-180">
+                            <svg fill="none" height="24" shape-rendering="geometricPrecision" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 24 24" width="24"><path d="M6 9l6 6 6-6"></path></svg>
+                        </span>
+                    </summary>
+                    <div class="text-stone-600 mt-3 text-sm">
+                        <p class="mb-2">1. Crie uma tabela `fornecedores` (ID, Nome, CNPJ).</p>
+                        <p class="mb-2">2. Adicione coluna `telefone` em `clientes`.</p>
+                        <p>3. Selecione produtos com estoque > 20.</p>
+                    </div>
+                </details>
+                <details class="group p-4">
+                    <summary class="flex justify-between items-center font-medium cursor-pointer list-none text-stone-700">
+                        <span>Nível Intermediário</span>
+                        <span class="transition group-open:rotate-180">
+                            <svg fill="none" height="24" shape-rendering="geometricPrecision" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 24 24" width="24"><path d="M6 9l6 6 6-6"></path></svg>
+                        </span>
+                    </summary>
+                    <div class="text-stone-600 mt-3 text-sm">
+                        <p class="mb-2">1. UPDATE único: Mude nome para 'Teclado RGB' E estoque +5.</p>
+                        <p>2. Tente inserir CPF duplicado e explique o erro (UNIQUE).</p>
+                    </div>
+                </details>
+                <details class="group p-4">
+                    <summary class="flex justify-between items-center font-medium cursor-pointer list-none text-teal-700">
+                        <span>🚀 Desafio Extra (Projeto)</span>
+                        <span class="transition group-open:rotate-180">
+                            <svg fill="none" height="24" shape-rendering="geometricPrecision" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 24 24" width="24"><path d="M6 9l6 6 6-6"></path></svg>
+                        </span>
+                    </summary>
+                    <div class="text-stone-600 mt-3 text-sm">
+                        <p>Contexto: Controle de Unidades Físicas.</p>
+                        <p class="mt-2 font-mono text-xs bg-stone-100 p-2 rounded">
+                            Crie tabela `unidades_loja`. Altere `produtos` para ter FK da unidade. Crie script de transferência de estoque entre lojas.
+                        </p>
+                    </div>
+                </details>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="bg-stone-800 text-stone-400 py-8 text-center border-t border-stone-700">
+    <p class="mb-2">Desenvolvido para Aula 01 - Laboratório de Banco de Dados</p>
+    <p class="text-xs">Baseado no material do Prof. Ferdinando Paes</p>
+</footer>
+
+<!-- Logic -->
+<script>
+    // --- 1. Global State & Data ---
+    const initialState = [
+        { id: 1, name: 'Teclado Mecânico', price: 250.00, stock: 50, cat: 'Periféricos' },
+        { id: 2, name: 'Mouse Gamer', price: 180.00, stock: 30, cat: 'Periféricos' },
+        { id: 3, name: 'Monitor 24"', price: 950.00, stock: 10, cat: 'Monitores' }
+    ];
+    
+    // "Database" state
+    let db = {
+        tableCreated: false,
+        columnsAdded: false, // tracks 'categoria' column
+        data: []
+    };
+
+    // Charts instances
+    let stockChartInst = null;
+    let priceChartInst = null;
+    let introChartInst = null;
+
+    // --- 2. Chart Initialization ---
+    
+    function initCharts() {
+        // Intro Doughnut (DDL vs DML)
+        const ctxIntro = document.getElementById('introChart').getContext('2d');
+        introChartInst = new Chart(ctxIntro, {
+            type: 'doughnut',
+            data: {
+                labels: ['DDL (Estrutura)', 'DML (Dados)'],
+                datasets: [{
+                    data: [40, 60],
+                    backgroundColor: ['#0D9488', '#EA580C'], // Teal 600, Orange 600
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' },
+                    tooltip: {
+                        callbacks: {
+                            title: function(tooltipItems) {
+                                // Handle multiline labels manually if needed, or just return basic
+                                return tooltipItems[0].label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Stock Bar Chart
+        const ctxStock = document.getElementById('stockChart').getContext('2d');
+        stockChartInst = new Chart(ctxStock, {
+            type: 'bar',
+            data: { labels: [], datasets: [] },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { y: { beginAtZero: true } },
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        // Price Bubble Chart (Using Scatter for simplicity to show distribution)
+        const ctxPrice = document.getElementById('priceChart').getContext('2d');
+        priceChartInst = new Chart(ctxPrice, {
+            type: 'bubble',
+            data: { datasets: [] },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { 
+                        title: { display: true, text: 'Preço (R$)' },
+                        beginAtZero: false 
+                    },
+                    y: { 
+                        display: false // Hide Y axis for 1D distribution feel
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.raw.product + ': R$ ' + context.raw.x;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // --- 3. Simulator Logic ---
+
+    function logSQL(msg, type = 'info') {
+        const log = document.getElementById('sql-log');
+        const entry = document.createElement('div');
+        entry.className = type === 'error' ? 'text-red-400' : 'text-stone-300';
+        entry.innerText = `> ${msg}`;
+        log.prepend(entry); // Newest on top
+    }
+
+    function updateUI() {
+        // Update Table
+        const thead = document.getElementById('table-header');
+        const tbody = document.getElementById('table-body');
+        const msg = document.getElementById('table-msg');
+        const count = document.getElementById('row-count');
+
+        tbody.innerHTML = '';
+        thead.innerHTML = '';
+
+        if (!db.tableCreated) {
+            msg.style.display = 'block';
+            count.innerText = '0 rows';
+            thead.innerHTML = '<th class="p-3 text-sm text-stone-400 italic font-light">Tabela não criada</th>';
+            updateCharts([]);
+            return;
+        }
+
+        msg.style.display = 'none';
+
+        // Build Headers
+        let headers = ['ID', 'Produto', 'Preço', 'Estoque'];
+        if (db.columnsAdded) headers.push('Categoria');
+        
+        headers.forEach(h => {
+            thead.innerHTML += `<th class="p-3">${h}</th>`;
+        });
+
+        // Build Rows
+        db.data.forEach(row => {
+            let tr = document.createElement('tr');
+            tr.className = "hover:bg-stone-50 transition";
+            let html = `
+                <td>${row.id}</td>
+                <td class="font-medium text-stone-700">${row.name}</td>
+                <td class="text-emerald-600">R$ ${row.price.toFixed(2)}</td>
+                <td><span class="bg-stone-100 text-stone-600 px-2 py-1 rounded text-xs font-bold">${row.stock}</span></td>
+            `;
+            if (db.columnsAdded) {
+                html += `<td><span class="text-xs text-stone-500 border border-stone-200 px-2 py-0.5 rounded">${row.cat || '-'}</span></td>`;
+            }
+            tr.innerHTML = html;
+            tbody.appendChild(tr);
+        });
+
+        count.innerText = `${db.data.length} rows`;
+        updateCharts(db.data);
+    }
+
+    function updateCharts(data) {
+        // Helper for splitting long labels
+        const processLabel = (label) => {
+            if (label.length > 16) {
+                return label.split(' '); // Simple split by space
+            }
+            return label;
+        };
+
+        // Update Stock
+        stockChartInst.data.labels = data.map(d => processLabel(d.name));
+        stockChartInst.data.datasets = [{
+            label: 'Estoque',
+            data: data.map(d => d.stock),
+            backgroundColor: '#0D9488',
+            borderRadius: 4
+        }];
+        stockChartInst.update();
+
+        // Update Price (Bubble logic: x=price, y=random for spacing, r=stock scaled)
+        priceChartInst.data.datasets = [{
+            label: 'Produtos',
+            data: data.map(d => ({
+                x: d.price,
+                y: 5, // Fixed Y line
+                r: Math.max(5, d.stock / 2), // Bubble size based on stock
+                product: d.name
+            })),
+            backgroundColor: 'rgba(234, 88, 12, 0.6)', // Orange transparent
+            borderColor: '#EA580C'
+        }];
+        priceChartInst.update();
+    }
+
+    // --- 4. Interactive Functions ---
+
+    function simCreate() {
+        db.tableCreated = true;
+        document.getElementById('ddl-status').innerText = "Tabela 'produtos' criada com sucesso.";
+        document.getElementById('ddl-status').className = "text-xs text-teal-600 mt-2 font-bold";
+        
+        // Enable next steps
+        document.getElementById('btn-create').disabled = true;
+        document.getElementById('btn-create').classList.add('opacity-50', 'cursor-not-allowed');
+        
+        enableBtn('btn-alter', 'bg-teal-600');
+        enableBtn('btn-insert', 'bg-orange-600'); // Can insert now, but schema is partial
+
+        logSQL("CREATE TABLE produtos (id INT, nome VARCHAR...);");
+        updateUI();
+    }
+
+    function simAlter() {
+        if(!db.tableCreated) return;
+        db.columnsAdded = true;
+        document.getElementById('ddl-status').innerText = "Coluna 'categoria' adicionada.";
+        disableBtn('btn-alter');
+        logSQL("ALTER TABLE produtos ADD COLUMN categoria VARCHAR(30);");
+        updateUI();
+    }
+
+    function simInsert() {
+        // Add initial data
+        // Clone initial state to avoid ref issues
+        db.data = JSON.parse(JSON.stringify(initialState));
+        disableBtn('btn-insert');
+        enableBtn('btn-update', 'bg-orange-600');
+        enableBtn('btn-insert-extra', 'bg-orange-600');
+        enableBtn('btn-delete', 'bg-red-500'); // Delete is a red action
+        logSQL("INSERT INTO produtos VALUES (...); -- 3 linhas inseridas");
+        updateUI();
+    }
+
+    function simInsertExtra() {
+         const newProd = { id: 4, name: 'Headset RGB', price: 300.00, stock: 15, cat: 'Periféricos' };
+         db.data.push(newProd);
+         disableBtn('btn-insert-extra');
+         logSQL("INSERT INTO produtos (Headset...);");
+         updateUI();
+    }
+
+    function simUpdate() {
+        let count = 0;
+        db.data.forEach(p => {
+            if(p.cat === 'Periféricos') {
+                p.price = p.price * 1.10;
+                count++;
+            }
+        });
+        disableBtn('btn-update');
+        logSQL(`UPDATE produtos SET preco = preco * 1.1 WHERE categoria = 'Periféricos'; -- ${count} afetados`);
+        updateUI();
+    }
+
+    function simDelete() {
+        const initialLen = db.data.length;
+        db.data = db.data.filter(p => p.id !== 2); // Remove ID 2
+        if (db.data.length < initialLen) {
+            disableBtn('btn-delete');
+            logSQL("DELETE FROM produtos WHERE id_produto = 2;");
+            updateUI();
+        }
+    }
+
+    function resetSim() {
+        db = { tableCreated: false, columnsAdded: false, data: [] };
+        
+        // Reset Buttons
+        const btns = ['btn-create', 'btn-alter', 'btn-insert', 'btn-update', 'btn-insert-extra', 'btn-delete'];
+        btns.forEach(id => {
+            const b = document.getElementById(id);
+            b.disabled = false;
+            b.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-teal-600', 'bg-orange-600', 'bg-red-500', 'hover:bg-teal-700', 'hover:bg-red-600');
+            
+            // Restore defaults
+            if(id === 'btn-create') {
+                b.className = "btn-interactive w-full bg-teal-600 hover:bg-teal-700 text-white font-medium py-2 px-4 rounded mb-2 text-left flex justify-between items-center";
+            } else {
+                b.className = "btn-interactive w-full bg-stone-300 text-white font-medium py-2 px-4 rounded text-left flex justify-between items-center cursor-not-allowed";
+                b.disabled = true;
+            }
+        });
+
+        document.getElementById('ddl-status').innerText = "Aguardando criação...";
+        document.getElementById('ddl-status').className = "text-xs text-stone-400 mt-2 italic";
+        document.getElementById('sql-log').innerHTML = '<span class="text-stone-500">> Aguardando comandos...</span>';
+        
+        updateUI();
+    }
+
+    // Helpers for buttons
+    function enableBtn(id, colorClass) {
+        const btn = document.getElementById(id);
+        btn.disabled = false;
+        btn.classList.remove('bg-stone-300', 'cursor-not-allowed');
+        btn.classList.add(...colorClass.split(' '));
+    }
+    function disableBtn(id) {
+        const btn = document.getElementById(id);
+        btn.disabled = true;
+        btn.classList.add('opacity-50', 'cursor-not-allowed');
+    }
+
+    // --- 5. Danger Zone Logic ---
+    const dangerGrid = document.getElementById('danger-grid');
+    const dangerResult = document.getElementById('danger-result');
+    const safetyCode = document.getElementById('safety-code');
+
+    function initDangerZone() {
+        // Create 20 boxes
+        dangerGrid.innerHTML = '';
+        for(let i=0; i<20; i++) {
+            const box = document.createElement('div');
+            box.className = "w-8 h-8 bg-teal-500 rounded shadow-sm border border-teal-600 transition-all duration-500";
+            box.id = `box-${i}`;
+            dangerGrid.appendChild(box);
+        }
+    }
+
+    function toggleSafety() {
+        const isSafe = document.getElementById('where-toggle').checked;
+        if (isSafe) {
+            safetyCode.innerHTML = "DELETE FROM produtos <span class='text-yellow-400 font-bold'>WHERE id = 5</span>;";
+            safetyCode.className = "text-green-400 font-mono text-sm block transition";
+            initDangerZone(); // Reset visualization
+            dangerResult.innerText = "";
+        } else {
+            safetyCode.innerHTML = "DELETE FROM produtos;";
+            safetyCode.className = "text-red-500 font-bold font-mono text-sm block transition";
+        }
+    }
+
+    function executeDanger() {
+        const isSafe = document.getElementById('where-toggle').checked;
+        
+        if (isSafe) {
+            // Delete only one (visualize box 5 disappearing)
+            const target = document.getElementById('box-5');
+            if(target) {
+                target.classList.remove('bg-teal-500', 'border-teal-600');
+                target.classList.add('bg-red-500', 'scale-0', 'opacity-0');
+                dangerResult.innerText = "Sucesso! Apenas 1 registro removido.";
+                dangerResult.className = "mt-4 text-center font-bold text-green-600 h-6";
+            }
+        } else {
+            // Delete ALL
+            for(let i=0; i<20; i++) {
+                const box = document.getElementById(`box-${i}`);
+                setTimeout(() => {
+                    box.classList.remove('bg-teal-500', 'border-teal-600');
+                    box.classList.add('bg-stone-300', 'scale-50', 'opacity-20');
+                }, i * 30); // Staggered effect
+            }
+            dangerResult.innerText = "DESASTRE! Tabela inteira apagada.";
+            dangerResult.className = "mt-4 text-center font-bold text-red-600 h-6 animate-pulse";
+        }
+    }
+
+    // Init
+    window.addEventListener('load', () => {
+        initCharts();
+        updateUI(); // renders empty table state
+        initDangerZone();
+    });
+
+</script>
+</body> </html>

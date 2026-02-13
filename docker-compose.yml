@@ -1,0 +1,18 @@
+# Docker Compose criado para fins academicos 
+services:
+  db:
+    image: mysql:8.0
+    container_name: mysql_container
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: admin123456
+      MYSQL_DATABASE: aula
+      MYSQL_USER: ferdinando
+      MYSQL_PASSWORD: admin123
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:
