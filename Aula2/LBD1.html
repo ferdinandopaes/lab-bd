@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR"> <head> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>Aula 02: Projeto IBM - Laboratório SQL</title>
+
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- Chart.js -->
+<script src="[https://cdn.jsdelivr.net/npm/chart.js](https://cdn.jsdelivr.net/npm/chart.js)"></script>
+
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
+
+    body {
+        font-family: 'Inter', sans-serif;
+        background-color: #F8FAFC; /* Slate 50 */
+        color: #1E293B; /* Slate 800 */
+    }
+
+    .font-mono {
+        font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Chart Container Styling */
+    .chart-container {
+        position: relative;
+        width: 100%;
+        max-width: 100%;
+        height: 250px;
+        max-height: 300px;
+    }
+
+    @media (min-width: 768px) {
+        .chart-container {
+            height: 300px;
+        }
+    }
+
+    /* Custom Scrollbar for Console */
+    .console-scroll::-webkit-scrollbar {
+        width: 8px;
+    }
+    .console-scroll::-webkit-scrollbar-track {
+        background: #1E293B; 
+    }
+    .console-scroll::-webkit-scrollbar-thumb {
+        background: #475569; 
+        border-radius: 4px;
+    }
+
+    /* Card Hover Effects */
+    .concept-card {
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+    .concept-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Tab Animation */
+    .tab-btn.active {
+        border-bottom: 2px solid #2563EB; /* Blue 600 */
+        color: #2563EB;
+    }
+</style>
+</head> <body class="antialiased">
+
+<!-- Header -->
+<header class="bg-white border-b border-slate-200 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <span class="bg-blue-700 text-white p-2 rounded-lg font-bold text-lg">IBM</span>
+            <div>
+                <h1 class="text-lg font-bold text-slate-900 leading-tight">Laboratório de Banco de Dados</h1>
+                <p class="text-xs text-slate-500">Aula 02: Projeto IBM & Revisão SQL</p>
+            </div>
+        </div>
+        <div class="hidden md:flex items-center gap-4 text-sm font-medium text-slate-600">
+            <span class="flex items-center gap-1">👨‍🏫 Prof. Ferdinando Paes</span>
+            <span class="flex items-center gap-1">⏱️ 02 Horas</span>
+        </div>
+    </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+
+    <!-- Section 1: Introduction & Theory -->
+    <section>
+        <div class="mb-6">
+            <h2 class="text-2xl font-bold text-slate-800">1. Fundamentação Teórica</h2>
+            <p class="text-slate-600 mt-2">
+                Antes de iniciarmos a construção do banco da IBM, é crucial distinguir a linguagem da ferramenta e entender os pilares da manipulação de dados.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <!-- Concept 1 -->
+            <div class="concept-card bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                <div class="text-blue-600 text-3xl mb-3">🗣️</div>
+                <h3 class="font-bold text-slate-800 mb-2">SQL vs. MySQL</h3>
+                <p class="text-sm text-slate-600">
+                    <strong>SQL</strong> é o padrão (regras de trânsito).<br>
+                    <strong>MySQL</strong> é o motor (ferramenta) que executa as regras.
+                </p>
+            </div>
+            <!-- Concept 2 -->
+            <div class="concept-card bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                <div class="text-blue-600 text-3xl mb-3">🏗️</div>
+                <h3 class="font-bold text-slate-800 mb-2">DDL (Estrutura)</h3>
+                <p class="text-sm text-slate-600">
+                    Define o esqueleto.<br>
+                    <code class="bg-slate-100 px-1 rounded">CREATE</code>, <code class="bg-slate-100 px-1 rounded">ALTER</code>, <code class="bg-slate-100 px-1 rounded">DROP</code>.<br>
+                    Lida com metadados.
+                </p>
+            </div>
+            <!-- Concept 3 -->
+            <div class="concept-card bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                <div class="text-blue-600 text-3xl mb-3">📝</div>
+                <h3 class="font-bold text-slate-800 mb-2">DML (Dados)</h3>
+                <p class="text-sm text-slate-600">
+                    Manipula o conteúdo.<br>
+                    <code class="bg-slate-100 px-1 rounded">INSERT</code>, <code class="bg-slate-100 px-1 rounded">UPDATE</code>, <code class="bg-slate-100 px-1 rounded">DELETE</code>, <code class="bg-slate-100 px-1 rounded">SELECT</code>.
+                </p>
+            </div>
+            <!-- Concept 4 -->
+            <div class="concept-card bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                <div class="text-amber-500 text-3xl mb-3">⚠️</div>
+                <h3 class="font-bold text-slate-800 mb-2">Boas Práticas</h3>
+                <p class="text-sm text-slate-600">
+                    Use <strong>Notepad++</strong> para rascunhos. Nunca esqueça o <code class="bg-red-50 text-red-600 px-1 rounded">WHERE</code>. Respeite as Chaves (PK/FK).
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 2: Interactive Lab -->
+    <section class="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
+        <div class="bg-slate-900 p-6 flex justify-between items-center text-white">
+            <div>
+                <h2 class="text-xl font-bold flex items-center gap-2">
+                    <span class="text-blue-400">💻</span> Console do MySQL Workbench
+                </h2>
+                <p class="text-slate-400 text-sm">Ambiente Simulado: projeto_ibm</p>
+            </div>
+            <div class="flex gap-2">
+                <span class="px-3 py-1 bg-green-500/20 text-green-400 text-xs rounded-full border border-green-500/30">Status: Conectado</span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 min-h-[600px]">
+            
+            <!-- Left Panel: Controls (Scripts) -->
+            <div class="bg-slate-50 p-6 border-r border-slate-200 lg:col-span-1 space-y-6">
+                <div>
+                    <h3 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-3">1. Definição (DDL)</h3>
+                    <div class="space-y-3">
+                        <button onclick="runStep(1)" id="btn-step-1" class="w-full text-left bg-white p-3 rounded-lg border border-slate-200 shadow-sm hover:border-blue-500 hover:shadow-md transition group">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="font-bold text-slate-700 group-hover:text-blue-600">Criar Tabelas</span>
+                                <span class="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded">CREATE</span>
+                            </div>
+                            <code class="text-xs text-slate-500 block truncate">CREATE TABLE deptos...</code>
+                        </button>
+                        <button onclick="runStep(2)" id="btn-step-2" disabled class="w-full text-left bg-slate-100 p-3 rounded-lg border border-slate-200 shadow-sm transition opacity-50 cursor-not-allowed group">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="font-bold text-slate-700 group-hover:text-blue-600">Evoluir Esquema</span>
+                                <span class="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded">ALTER</span>
+                            </div>
+                            <code class="text-xs text-slate-500 block truncate">ADD COLUMN email...</code>
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-3">2. Manipulação (DML)</h3>
+                    <div class="space-y-3">
+                        <button onclick="runStep(3)" id="btn-step-3" disabled class="w-full text-left bg-slate-100 p-3 rounded-lg border border-slate-200 shadow-sm transition opacity-50 cursor-not-allowed group">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="font-bold text-slate-700 group-hover:text-green-600">Popular Deptos</span>
+                                <span class="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded">INSERT</span>
+                            </div>
+                            <code class="text-xs text-slate-500 block truncate">VALUES (10, 'Sistemas')...</code>
+                        </button>
+                        <button onclick="runStep(4)" id="btn-step-4" disabled class="w-full text-left bg-slate-100 p-3 rounded-lg border border-slate-200 shadow-sm transition opacity-50 cursor-not-allowed group">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="font-bold text-slate-700 group-hover:text-green-600">Contratar Equipe</span>
+                                <span class="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded">INSERT</span>
+                            </div>
+                            <code class="text-xs text-slate-500 block truncate">VALUES (101, 'Marcos')...</code>
+                        </button>
+                        <button onclick="runStep(5)" id="btn-step-5" disabled class="w-full text-left bg-slate-100 p-3 rounded-lg border border-slate-200 shadow-sm transition opacity-50 cursor-not-allowed group">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="font-bold text-slate-700 group-hover:text-blue-600">Aumento Salarial</span>
+                                <span class="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded">UPDATE</span>
+                            </div>
+                            <code class="text-xs text-slate-500 block truncate">SET salario * 1.05 WHERE...</code>
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-sm font-bold text-red-500 uppercase tracking-wider mb-3">3. Zona de Perigo</h3>
+                    <div class="space-y-3">
+                        <button onclick="runStep(6)" id="btn-step-6" disabled class="w-full text-left bg-slate-100 p-3 rounded-lg border border-slate-200 shadow-sm transition opacity-50 cursor-not-allowed hover:border-red-500 hover:bg-red-50 group">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="font-bold text-slate-700 group-hover:text-red-600">Deletar Depto Ativo</span>
+                                <span class="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded">DELETE</span>
+                            </div>
+                            <code class="text-xs text-slate-500 block truncate">DELETE dept WHERE id=10</code>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-slate-200">
+                     <button onclick="resetLab()" class="w-full text-center text-sm text-slate-500 hover:text-blue-600 font-medium py-2">
+                        ⟳ Reiniciar Ambiente
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Panel: Output & Visualization -->
+            <div class="lg:col-span-2 flex flex-col bg-white">
+                
+                <!-- Console Output -->
+                <div class="h-48 bg-slate-900 p-4 font-mono text-sm overflow-y-auto console-scroll border-b border-slate-200">
+                    <div class="text-slate-400 mb-2">MySQL Workbench Console 8.0</div>
+                    <div id="console-output" class="flex flex-col gap-1">
+                        <span class="text-green-400">> Conexão estabelecida com sucesso...</span>
+                        <span class="text-slate-500">> Aguardando comandos...</span>
+                    </div>
+                </div>
+
+                <!-- Visual Tabs -->
+                <div class="flex border-b border-slate-200">
+                    <button onclick="switchTab('data')" id="tab-data" class="tab-btn active px-6 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50">Visualização de Dados (Grid)</button>
+                    <button onclick="switchTab('charts')" id="tab-charts" class="tab-btn px-6 py-3 text-sm font-bold text-slate-500 hover:bg-slate-50">Dashboard Gerencial</button>
+                </div>
+
+                <!-- Tab Content: Data Grid -->
+                <div id="view-data" class="p-6 flex-1 overflow-y-auto bg-slate-50">
+                    <!-- Departamentos Table -->
+                    <div class="mb-8">
+                        <h4 class="text-sm font-bold text-slate-700 mb-2 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-blue-500"></span> Tabela: departamentos
+                        </h4>
+                        <div class="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm">
+                            <table class="w-full text-sm text-left">
+                                <thead class="bg-slate-100 text-slate-600 font-bold border-b border-slate-200">
+                                    <tr><th class="p-3">id_depto</th><th class="p-3">nome_depto</th><th class="p-3">localizacao</th></tr>
+                                </thead>
+                                <tbody id="tbody-dept" class="divide-y divide-slate-100 text-slate-600">
+                                    <tr><td colspan="3" class="p-4 text-center text-slate-400 italic">Tabela vazia</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Funcionarios Table -->
+                    <div>
+                        <h4 class="text-sm font-bold text-slate-700 mb-2 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-green-500"></span> Tabela: funcionarios
+                        </h4>
+                        <div class="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm">
+                            <table class="w-full text-sm text-left">
+                                <thead class="bg-slate-100 text-slate-600 font-bold border-b border-slate-200">
+                                    <tr id="thead-func-row">
+                                        <th class="p-3">id_func</th>
+                                        <th class="p-3">nome</th>
+                                        <th class="p-3">cargo</th>
+                                        <th class="p-3">salario</th>
+                                        <th class="p-3">id_depto</th>
+                                        <!-- Email col added dynamically -->
+                                    </tr>
+                                </thead>
+                                <tbody id="tbody-func" class="divide-y divide-slate-100 text-slate-600">
+                                    <tr><td colspan="5" class="p-4 text-center text-slate-400 italic">Tabela não criada</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab Content: Charts -->
+                <div id="view-charts" class="p-6 flex-1 overflow-y-auto bg-slate-50 hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Chart 1: Salaries -->
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                            <h4 class="text-sm font-bold text-slate-700 mb-4">Média Salarial por Departamento</h4>
+                            <div class="chart-container">
+                                <canvas id="salaryChart"></canvas>
+                            </div>
+                            <p class="text-xs text-slate-400 mt-2 text-center">Observe o aumento após o UPDATE.</p>
+                        </div>
+                        <!-- Chart 2: Headcount -->
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                            <h4 class="text-sm font-bold text-slate-700 mb-4">Headcount (Funcionários/Depto)</h4>
+                            <div class="chart-container">
+                                <canvas id="headcountChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 3: Exercises -->
+    <section>
+        <div class="mb-6">
+            <h2 class="text-2xl font-bold text-slate-800">3. Exercícios de Fixação</h2>
+            <p class="text-slate-600 mt-2">Valide seu aprendizado. Clique para ver os detalhes.</p>
+        </div>
+
+        <div class="space-y-4">
+            <!-- Basic -->
+            <details class="bg-white rounded-lg border border-slate-200 shadow-sm group">
+                <summary class="flex justify-between items-center p-4 cursor-pointer list-none">
+                    <span class="font-bold text-slate-700 flex items-center gap-2">
+                        <span class="w-6 h-6 rounded bg-green-100 text-green-600 flex items-center justify-center text-xs">1</span>
+                        Nível Básico
+                    </span>
+                    <span class="text-slate-400 transform group-open:rotate-180 transition">▼</span>
+                </summary>
+                <div class="p-4 pt-0 text-sm text-slate-600 border-t border-slate-100 mt-2">
+                    <ul class="list-disc pl-5 space-y-2 pt-2">
+                        <li>Crie tabela <code>projetos</code> (id, nome, orcamento).</li>
+                        <li>Insira 2 departamentos extras.</li>
+                        <li>Altere <code>projetos</code> adicionando data_inicio.</li>
+                        <li>Selecione funcionários ganhando > R$ 5.000.</li>
+                        <li>Remova coluna <code>localizacao</code> de departamentos.</li>
+                    </ul>
+                </div>
+            </details>
+
+            <!-- Intermediate -->
+            <details class="bg-white rounded-lg border border-slate-200 shadow-sm group">
+                <summary class="flex justify-between items-center p-4 cursor-pointer list-none">
+                    <span class="font-bold text-slate-700 flex items-center gap-2">
+                        <span class="w-6 h-6 rounded bg-blue-100 text-blue-600 flex items-center justify-center text-xs">2</span>
+                        Nível Intermediário
+                    </span>
+                    <span class="text-slate-400 transform group-open:rotate-180 transition">▼</span>
+                </summary>
+                <div class="p-4 pt-0 text-sm text-slate-600 border-t border-slate-100 mt-2">
+                    <ul class="list-disc pl-5 space-y-2 pt-2">
+                        <li>Fechamento Unidade 'Vendas': Transfira 'Ricardo Lima' para Depto 10, depois DELETE Depto 30.</li>
+                        <li>Aumento de 15% para admitidos antes de 2022.</li>
+                        <li>Selecione nome/cargo do Depto 20 ordenado por nome.</li>
+                        <li>Adicione restrição CHECK para salário > R$ 1.412.</li>
+                        <li>Liste departamentos começando com 'S'.</li>
+                    </ul>
+                </div>
+            </details>
+
+            <!-- Advanced & Challenge -->
+            <details class="bg-white rounded-lg border border-slate-200 shadow-sm group">
+                <summary class="flex justify-between items-center p-4 cursor-pointer list-none">
+                    <span class="font-bold text-slate-700 flex items-center gap-2">
+                        <span class="w-6 h-6 rounded bg-purple-100 text-purple-600 flex items-center justify-center text-xs">3</span>
+                        Desafio Extra (Projeto)
+                    </span>
+                    <span class="text-slate-400 transform group-open:rotate-180 transition">▼</span>
+                </summary>
+                <div class="p-4 pt-0 text-sm text-slate-600 border-t border-slate-100 mt-2">
+                    <p class="font-bold mb-2">Cenário: Alocação de Projetos</p>
+                    <ul class="list-disc pl-5 space-y-2">
+                        <li>Crie tabela associativa <code>alocacao_projetos</code> (id_func, id_projeto, horas).</li>
+                        <li>Use Chave Primária Composta para evitar duplicidade.</li>
+                        <li>Relacione quais funcionários estão em projetos com orçamento > 100k.</li>
+                    </ul>
+                </div>
+            </details>
+        </div>
+    </section>
+
+</main>
+
+<footer class="bg-white border-t border-slate-200 mt-12 py-8">
+    <div class="max-w-7xl mx-auto px-4 text-center">
+        <p class="text-slate-500 text-sm">Laboratório de Banco de Dados - Fatec Garça</p>
+        <p class="text-slate-400 text-xs mt-1">Baseado nos materiais do Prof. Ferdinando Paes</p>
+    </div>
+</footer>
+
+<!-- JS Logic -->
+<script>
+    // --- State Management ---
+    const dbState = {
+        tablesCreated: false,
+        schemaAltered: false,
+        departments: [],
+        employees: []
+    };
+
+    // --- Data Definitions ---
+    const initialDepts = [
+        { id: 10, name: 'Sistemas', loc: 'São Paulo' },
+        { id: 20, name: 'Hardware', loc: 'Hortolândia' },
+        { id: 30, name: 'Vendas', loc: 'Rio de Janeiro' }
+    ];
+
+    const initialEmployees = [
+        { id: 101, name: 'Marcos Silva', role: 'Analista', salary: 5500.00, hired: '2022-01-15', deptId: 10, email: 'marcos@ibm.com' },
+        { id: 102, name: 'Beatriz Souza', role: 'Engenheira', salary: 7200.00, hired: '2021-03-10', deptId: 20, email: 'beatriz@ibm.com' },
+        { id: 103, name: 'Ricardo Lima', role: 'Vendedor', salary: 4000.00, hired: '2023-05-20', deptId: 30, email: 'ricardo@ibm.com' }
+    ];
+
+    // --- Charts Initialization ---
+    let salaryChart, headcountChart;
+
+    function initCharts() {
+        // Salary Chart
+        const ctxSalary = document.getElementById('salaryChart').getContext('2d');
+        salaryChart = new Chart(ctxSalary, {
+            type: 'bar',
+            data: {
+                labels: ['Sistemas', 'Hardware', 'Vendas'],
+                datasets: [{
+                    label: 'Média Salarial (R$)',
+                    data: [0, 0, 0],
+                    backgroundColor: '#3B82F6',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+
+        // Headcount Chart
+        const ctxHead = document.getElementById('headcountChart').getContext('2d');
+        headcountChart = new Chart(ctxHead, {
+            type: 'doughnut',
+            data: {
+                labels: ['Sistemas', 'Hardware', 'Vendas'],
+                datasets: [{
+                    data: [0, 0, 0],
+                    backgroundColor: ['#3B82F6', '#10B981', '#F59E0B'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+    }
+
+    // --- Console Logic ---
+    function log(msg, type = 'info') {
+        const consoleDiv = document.getElementById('console-output');
+        const line = document.createElement('div');
+        
+        if(type === 'cmd') {
+            line.innerHTML = `<span class="text-blue-300 font-bold">> ${msg}</span>`;
+        } else if (type === 'success') {
+            line.innerHTML = `<span class="text-green-400 pl-4">✓ ${msg}</span>`;
+        } else if (type === 'error') {
+            line.innerHTML = `<span class="text-red-400 pl-4">✖ ${msg}</span>`;
+        } else {
+            line.innerHTML = `<span class="text-slate-400 pl-4">${msg}</span>`;
+        }
+        
+        consoleDiv.appendChild(line);
+        consoleDiv.scrollTop = consoleDiv.scrollHeight;
+    }
+
+    // --- Simulation Steps ---
+
+    function runStep(step) {
+        const btn = document.getElementById(`btn-step-${step}`);
+        if(btn.disabled) return;
+        
+        // Disable button after run
+        btn.disabled = true;
+        btn.classList.add('opacity-50', 'cursor-not-allowed');
+        
+        switch(step) {
+            case 1: // Create Tables
+                log('CREATE TABLE departamentos (...);', 'cmd');
+                log('CREATE TABLE funcionarios (...);', 'cmd');
+                setTimeout(() => {
+                    dbState.tablesCreated = true;
+                    log('Query OK, 0 rows affected (0.02 sec)', 'success');
+                    renderTables();
+                    enableBtn(2);
+                }, 500);
+                break;
+            case 2: // Alter Table
+                log('ALTER TABLE funcionarios ADD COLUMN email VARCHAR(100) UNIQUE;', 'cmd');
+                setTimeout(() => {
+                    dbState.schemaAltered = true;
+                    log('Query OK, 0 rows affected. Records: 0  Duplicates: 0', 'success');
+                    renderTables();
+                    enableBtn(3);
+                }, 500);
+                break;
+            case 3: // Insert Depts
+                log('INSERT INTO departamentos VALUES (10...), (20...), (30...);', 'cmd');
+                setTimeout(() => {
+                    dbState.departments = [...initialDepts];
+                    log('Query OK, 3 rows affected', 'success');
+                    renderTables();
+                    updateCharts();
+                    enableBtn(4);
+                }, 500);
+                break;
+            case 4: // Insert Employees
+                log('INSERT INTO funcionarios VALUES (101...), (102...), (103...);', 'cmd');
+                setTimeout(() => {
+                    dbState.employees = [...initialEmployees];
+                    log('Query OK, 3 rows affected', 'success');
+                    renderTables();
+                    updateCharts();
+                    enableBtn(5);
+                }, 500);
+                break;
+            case 5: // Update Salary
+                log("UPDATE funcionarios SET salario = salario * 1.05 WHERE id_depto = 10;", 'cmd');
+                setTimeout(() => {
+                    // Apply logic
+                    let affected = 0;
+                    dbState.employees.forEach(emp => {
+                        if(emp.deptId === 10) {
+                            emp.salary = emp.salary * 1.05;
+                            affected++;
+                        }
+                    });
+                    log(`Query OK, ${affected} rows affected. Rows matched: ${affected}`, 'success');
+                    renderTables();
+                    updateCharts();
+                    enableBtn(6);
+                }, 500);
+                break;
+            case 6: // Delete Error
+                log("DELETE FROM departamentos WHERE id_depto = 10;", 'cmd');
+                setTimeout(() => {
+                    log("Error Code: 1451. Cannot delete or update a parent row: a foreign key constraint fails (`projeto_ibm`.`funcionarios`, CONSTRAINT `fk_depto` FOREIGN KEY (`id_depto`) REFERENCES `departamentos` (`id_depto`))", 'error');
+                    log("Ação bloqueada pelo SGBD para manter a integridade.", 'info');
+                }, 500);
+                break;
+        }
+    }
+
+    // --- Render Helpers ---
+
+    function renderTables() {
+        // Render Depts
+        const tbodyDept = document.getElementById('tbody-dept');
+        if(!dbState.tablesCreated) {
+            tbodyDept.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-slate-400 italic">Tabela não criada</td></tr>';
+        } else if (dbState.departments.length === 0) {
+            tbodyDept.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-slate-400 italic">0 rows (Vazio)</td></tr>';
+        } else {
+            tbodyDept.innerHTML = dbState.departments.map(d => `
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="p-3 font-mono">${d.id}</td>
+                    <td class="p-3 font-bold text-slate-700">${d.name}</td>
+                    <td class="p-3">${d.loc}</td>
+                </tr>
+            `).join('');
+        }
+
+        // Render Funcs
+        const tbodyFunc = document.getElementById('tbody-func');
+        const theadRow = document.getElementById('thead-func-row');
+        
+        // Dynamic Header (Email col)
+        if(dbState.schemaAltered) {
+            if(!theadRow.innerHTML.includes('email')) {
+                theadRow.innerHTML += '<th class="p-3">email</th>';
+            }
+        } else {
+            // Reset header if needed (for restart)
+             theadRow.innerHTML = '<th class="p-3">id_func</th><th class="p-3">nome</th><th class="p-3">cargo</th><th class="p-3">salario</th><th class="p-3">id_depto</th>';
+        }
+
+        if(!dbState.tablesCreated) {
+            tbodyFunc.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-400 italic">Tabela não criada</td></tr>';
+        } else if (dbState.employees.length === 0) {
+             const colSpan = dbState.schemaAltered ? 6 : 5;
+            tbodyFunc.innerHTML = `<tr><td colspan="${colSpan}" class="p-4 text-center text-slate-400 italic">0 rows (Vazio)</td></tr>`;
+        } else {
+            tbodyFunc.innerHTML = dbState.employees.map(e => `
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="p-3 font-mono">${e.id}</td>
+                    <td class="p-3 font-bold text-slate-700">${e.name}</td>
+                    <td class="p-3 text-xs uppercase bg-slate-100 rounded px-2 text-slate-500">${e.role}</td>
+                    <td class="p-3 text-green-600 font-mono">R$ ${e.salary.toFixed(2)}</td>
+                    <td class="p-3 font-mono text-blue-600">${e.deptId}</td>
+                    ${dbState.schemaAltered ? `<td class="p-3 text-slate-500 text-xs">${e.email}</td>` : ''}
+                </tr>
+            `).join('');
+        }
+    }
+
+    function updateCharts() {
+        // Calculate Data
+        const deptIds = [10, 20, 30];
+        const deptNames = ['Sistemas', 'Hardware', 'Vendas'];
+        
+        const headcounts = deptIds.map(id => dbState.employees.filter(e => e.deptId === id).length);
+        
+        const salaries = deptIds.map(id => {
+            const emps = dbState.employees.filter(e => e.deptId === id);
+            if(emps.length === 0) return 0;
+            const total = emps.reduce((sum, e) => sum + e.salary, 0);
+            return total / emps.length;
+        });
+
+        // Update Chart Objects
+        salaryChart.data.datasets[0].data = salaries;
+        salaryChart.update();
+
+        headcountChart.data.datasets[0].data = headcounts;
+        headcountChart.update();
+    }
+
+    // --- UI Utils ---
+
+    function enableBtn(step) {
+        const btn = document.getElementById(`btn-step-${step}`);
+        btn.disabled = false;
+        btn.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-slate-100');
+        btn.classList.add('bg-white', 'hover:border-blue-500', 'hover:shadow-md');
+    }
+
+    function switchTab(tab) {
+        // Buttons
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active', 'text-slate-700'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.add('text-slate-500'));
+        document.getElementById(`tab-${tab}`).classList.add('active', 'text-slate-700');
+        document.getElementById(`tab-${tab}`).classList.remove('text-slate-500');
+
+        // View
+        document.getElementById('view-data').classList.add('hidden');
+        document.getElementById('view-charts').classList.add('hidden');
+        document.getElementById(`view-${tab}`).classList.remove('hidden');
+    }
+
+    function resetLab() {
+        // Reset State
+        dbState.tablesCreated = false;
+        dbState.schemaAltered = false;
+        dbState.departments = [];
+        dbState.employees = [];
+
+        // Reset UI
+        document.getElementById('console-output').innerHTML = '<span class="text-green-400">> Conexão restabelecida...</span>';
+        
+        // Reset Buttons
+        for(let i=1; i<=6; i++) {
+            const btn = document.getElementById(`btn-step-${i}`);
+            if(i === 1) {
+                btn.disabled = false;
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+            } else {
+                btn.disabled = true;
+                btn.classList.add('opacity-50', 'cursor-not-allowed', 'bg-slate-100');
+                btn.classList.remove('bg-white', 'hover:border-blue-500', 'hover:shadow-md');
+            }
+        }
+
+        renderTables();
+        updateCharts();
+        switchTab('data');
+    }
+
+    // Init
+    window.addEventListener('load', () => {
+        initCharts();
+        renderTables();
+    });
+
+</script>
+</body> </html>
