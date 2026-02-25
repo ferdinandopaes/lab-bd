@@ -1,0 +1,579 @@
+<!-- Application Structure Plan: 1. 'Strategic Overview': Theory section using card layouts to explain the 'Why' behind schema evolution (Legacy vs Modern). 2. 'Evolution Lab': The core interactive component. A linear stepper interface where users click to simulate the passage of time/requirements. - As users advance steps (Legacy Table -> Add Columns -> Create Relations -> Populate), the 'Schema View' (Visual Entity Cards) and 'Data View' (Live Tables) update dynamically. 3. 'Analytics Dashboard': Once populated, this section unlocks. It uses Chart.js to visualize the "Project Budgets" and "Department Headcount", translating the raw DML data into insights. 4. 'Query Validator': A simulated SQL terminal where users can "Run" the specific verification queries from the lesson plan to see expected outputs. 5. 'Exercise Hub': Accordion-style list of the provided exercises. -->
+
+<!-- Visualization & Content Choices: 1. Dynamic Schema Map -> Goal: Organize -> HTML/CSS Cards -> Visualizes the table structures changing in real-time. Columns appear/highlight as DDL is "executed". 2. Project Budget Analysis -> Goal: Compare -> Bar Chart (Chart.js) -> Visualizes the 'orcamento' data from the 'projetos' table created in the lesson. 3. Department Distribution -> Goal: Relationships -> Doughnut Chart (Chart.js) -> Shows the distribution of employees across the newly created departments. 4. Live Data Grids -> Goal: Inform -> Styled HTML Tables -> Mimics the database state, showing nulls where appropriate and filled data after INSERTs. CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+<!DOCTYPE html>
+
+<html lang="pt-BR"> <head> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>Aula 04: Expansão de Esquema - SoftHouse Lab</title>
+
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+    @import url('[https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap](https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap)');
+
+    body {
+        font-family: 'IBM Plex Sans', sans-serif;
+        background-color: #F1F5F9; /* Slate 100 */
+        color: #1E293B; /* Slate 800 */
+    }
+
+    .font-mono {
+        font-family: 'IBM Plex Mono', monospace;
+    }
+
+    /* Chart Container Styling - Mandatory Strictness */
+    .chart-container {
+        position: relative;
+        width: 100%;
+        max-width: 100%;
+        height: 300px;
+        max-height: 350px;
+        margin: 0 auto;
+    }
+
+    /* Card Styles */
+    .entity-card {
+        transition: all 0.3s ease;
+        border-left: 4px solid transparent;
+    }
+    .entity-card.active {
+        border-left-color: #2563EB; /* Blue 600 */
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Column Badge */
+    .col-badge {
+        display: inline-block;
+        font-size: 0.75rem;
+        padding: 0.1rem 0.4rem;
+        border-radius: 9999px;
+        background-color: #E2E8F0;
+        color: #475569;
+        margin-left: auto;
+    }
+    .col-badge.new {
+        background-color: #D1FAE5;
+        color: #065F46;
+        animation: pulse 2s infinite;
+    }
+    .col-badge.fk {
+        background-color: #DBEAFE;
+        color: #1E40AF;
+        font-weight: bold;
+    }
+    .col-badge.pk {
+        background-color: #FEF3C7;
+        color: #92400E;
+        font-weight: bold;
+    }
+
+    @keyframes pulse {
+        0% { opacity: 0.6; }
+        50% { opacity: 1; }
+        100% { opacity: 0.6; }
+    }
+
+    /* Step Line */
+    .step-line {
+        position: absolute;
+        left: 1.25rem;
+        top: 2.5rem;
+        bottom: -0.5rem;
+        width: 2px;
+        background-color: #E2E8F0;
+        z-index: 0;
+    }
+    .step-item:last-child .step-line {
+        display: none;
+    }
+
+    /* SQL Terminal */
+    .sql-term {
+        background-color: #0F172A;
+        color: #38BDF8;
+        font-family: 'IBM Plex Mono', monospace;
+    }
+</style>
+</head> <body class="antialiased">
+
+<!-- Header -->
+<header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <div class="bg-blue-700 text-white p-2 rounded font-bold text-lg tracking-wider">IBM</div>
+            <div>
+                <h1 class="text-lg font-bold text-slate-900 leading-tight">Database Lab <span class="text-blue-600">04</span></h1>
+                <p class="text-xs text-slate-500">Expansão de Esquema & Relacionamentos</p>
+            </div>
+        </div>
+        <div class="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600">
+            <a href="#lab" class="hover:text-blue-600 transition">Laboratório</a>
+            <a href="#analytics" class="hover:text-blue-600 transition">Analytics</a>
+            <a href="#exercises" class="hover:text-blue-600 transition">Exercícios</a>
+        </div>
+    </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+
+    <!-- Intro Section -->
+    <section>
+        <div class="bg-blue-900 rounded-2xl p-8 text-white shadow-xl relative overflow-hidden">
+            <div class="relative z-10 max-w-3xl">
+                <h2 class="text-3xl font-bold mb-4">A Evolução do Banco de Dados</h2>
+                <p class="text-blue-100 text-lg leading-relaxed mb-6">
+                    No mundo real, sistemas legados precisam evoluir. Nesta aula, transformaremos uma tabela simples de funcionários em um ecossistema relacional completo, adicionando departamentos e projetos sem perder dados.
+                </p>
+                <div class="flex flex-wrap gap-4">
+                    <div class="bg-blue-800/50 backdrop-blur px-4 py-2 rounded-lg border border-blue-700">
+                        <span class="block text-xs text-blue-300 uppercase">Foco</span>
+                        <span class="font-semibold">ALTER TABLE (DDL)</span>
+                    </div>
+                    <div class="bg-blue-800/50 backdrop-blur px-4 py-2 rounded-lg border border-blue-700">
+                        <span class="block text-xs text-blue-300 uppercase">Integridade</span>
+                        <span class="font-semibold">Foreign Keys</span>
+                    </div>
+                </div>
+            </div>
+            <!-- Decorative Circle -->
+            <div class="absolute -right-20 -top-20 w-64 h-64 bg-blue-600 rounded-full opacity-20 blur-3xl"></div>
+        </div>
+    </section>
+
+    <!-- Interactive Evolution Lab -->
+    <section id="lab">
+        <div class="mb-6">
+            <h3 class="text-2xl font-bold text-slate-800">Laboratório de Evolução</h3>
+            <p class="text-slate-600">Siga o cronograma para atualizar o banco de dados da IBM.</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <!-- Left: Stepper Controls -->
+            <div class="lg:col-span-4 space-y-0 relative">
+                <!-- Step 1 -->
+                <div class="step-item relative pl-10 pb-8">
+                    <div class="step-line"></div>
+                    <div class="absolute left-0 top-0 w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold border-2 border-blue-600 z-10">1</div>
+                    <h4 class="font-bold text-slate-800">Cenário Legado</h4>
+                    <p class="text-sm text-slate-500 mb-2">Tabela básica de funcionários.</p>
+                    <button onclick="runLab(1)" id="btn-1" class="w-full text-left px-4 py-2 bg-white border border-slate-300 rounded hover:border-blue-500 transition shadow-sm text-sm font-mono text-blue-700">
+                        CREATE TABLE funcionarios...
+                    </button>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="step-item relative pl-10 pb-8">
+                    <div class="step-line"></div>
+                    <div class="absolute left-0 top-0 w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center font-bold border-2 border-slate-300 z-10" id="badge-2">2</div>
+                    <h4 class="font-bold text-slate-800">Novos Requisitos</h4>
+                    <p class="text-sm text-slate-500 mb-2">Adicionar e-mail e nascimento.</p>
+                    <button onclick="runLab(2)" id="btn-2" disabled class="w-full text-left px-4 py-2 bg-slate-100 border border-slate-200 rounded text-slate-400 cursor-not-allowed transition text-sm font-mono">
+                        ALTER TABLE ... ADD COLUMN
+                    </button>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="step-item relative pl-10 pb-8">
+                    <div class="step-line"></div>
+                    <div class="absolute left-0 top-0 w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center font-bold border-2 border-slate-300 z-10" id="badge-3">3</div>
+                    <h4 class="font-bold text-slate-800">Novas Entidades</h4>
+                    <p class="text-sm text-slate-500 mb-2">Criar Deptos e Projetos.</p>
+                    <button onclick="runLab(3)" id="btn-3" disabled class="w-full text-left px-4 py-2 bg-slate-100 border border-slate-200 rounded text-slate-400 cursor-not-allowed transition text-sm font-mono">
+                        CREATE TABLE deptos/projetos
+                    </button>
+                </div>
+
+                <!-- Step 4 -->
+                <div class="step-item relative pl-10 pb-8">
+                    <div class="step-line"></div>
+                    <div class="absolute left-0 top-0 w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center font-bold border-2 border-slate-300 z-10" id="badge-4">4</div>
+                    <h4 class="font-bold text-slate-800">Relacionamento (FK)</h4>
+                    <p class="text-sm text-slate-500 mb-2">Vincular Funcionario -> Depto.</p>
+                    <button onclick="runLab(4)" id="btn-4" disabled class="w-full text-left px-4 py-2 bg-slate-100 border border-slate-200 rounded text-slate-400 cursor-not-allowed transition text-sm font-mono">
+                        ADD CONSTRAINT fk_func_depto
+                    </button>
+                </div>
+
+                <!-- Step 5 -->
+                <div class="step-item relative pl-10 pb-0">
+                    <div class="absolute left-0 top-0 w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center font-bold border-2 border-slate-300 z-10" id="badge-5">5</div>
+                    <h4 class="font-bold text-slate-800">População de Dados</h4>
+                    <p class="text-sm text-slate-500 mb-2">Inserir registros e validar.</p>
+                    <button onclick="runLab(5)" id="btn-5" disabled class="w-full text-left px-4 py-2 bg-slate-100 border border-slate-200 rounded text-slate-400 cursor-not-allowed transition text-sm font-mono">
+                        INSERT INTO ... VALUES
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right: Visual State -->
+            <div class="lg:col-span-8 space-y-6">
+                
+                <!-- SQL Terminal Output -->
+                <div class="bg-slate-900 rounded-lg p-4 shadow-lg h-32 overflow-y-auto sql-term text-xs border-l-4 border-blue-500">
+                    <div id="sql-log">
+                        <span class="opacity-50">-- Aguardando início do laboratório...</span>
+                    </div>
+                </div>
+
+                <!-- Schema Visualization -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Funcionarios Card -->
+                    <div id="card-func" class="entity-card bg-white p-4 rounded-lg shadow-sm border border-slate-200 opacity-50">
+                        <div class="flex justify-between items-center mb-2 border-b pb-2">
+                            <h5 class="font-bold text-slate-700">funcionarios</h5>
+                            <span class="text-xs text-slate-400">TABLE</span>
+                        </div>
+                        <ul id="cols-func" class="space-y-1 text-sm font-mono text-slate-600">
+                            <!-- Columns injected by JS -->
+                        </ul>
+                    </div>
+
+                    <!-- Departamentos Card -->
+                    <div id="card-dept" class="entity-card bg-white p-4 rounded-lg shadow-sm border border-slate-200 opacity-25">
+                        <div class="flex justify-between items-center mb-2 border-b pb-2">
+                            <h5 class="font-bold text-slate-700">departamentos</h5>
+                            <span class="text-xs text-slate-400">TABLE</span>
+                        </div>
+                        <ul id="cols-dept" class="space-y-1 text-sm font-mono text-slate-600">
+                            <!-- Columns injected by JS -->
+                        </ul>
+                    </div>
+
+                    <!-- Projetos Card -->
+                    <div id="card-proj" class="entity-card bg-white p-4 rounded-lg shadow-sm border border-slate-200 opacity-25">
+                        <div class="flex justify-between items-center mb-2 border-b pb-2">
+                            <h5 class="font-bold text-slate-700">projetos</h5>
+                            <span class="text-xs text-slate-400">TABLE</span>
+                        </div>
+                        <ul id="cols-proj" class="space-y-1 text-sm font-mono text-slate-600">
+                            <!-- Columns injected by JS -->
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Live Data Preview -->
+                <div class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="bg-slate-50 px-4 py-2 border-b border-slate-200 flex justify-between items-center">
+                        <span class="text-sm font-bold text-slate-600">Prévia de Dados: Funcionarios</span>
+                        <span id="row-count" class="text-xs bg-slate-200 px-2 rounded text-slate-600">0 rows</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left">
+                            <thead id="thead-func" class="text-xs text-slate-500 uppercase bg-slate-50">
+                                <!-- Headers injected -->
+                            </thead>
+                            <tbody id="tbody-func" class="divide-y divide-slate-100">
+                                <tr><td class="p-4 text-center text-slate-400 italic">Tabela vazia ou inexistente</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Analytics Section -->
+    <section id="analytics" class="hidden opacity-0 transition-opacity duration-1000">
+        <div class="mb-6 border-t border-slate-200 pt-8">
+            <h3 class="text-2xl font-bold text-slate-800">Dashboard de Validação</h3>
+            <p class="text-slate-600">Análise dos dados inseridos no banco reestruturado.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Budget Chart -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <h4 class="font-bold text-slate-700 mb-4">Orçamento por Projeto (R$)</h4>
+                <p class="text-xs text-slate-500 mb-4">Visualização da tabela <code>projetos</code>.</p>
+                <div class="chart-container">
+                    <canvas id="budgetChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Distribution Chart -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <h4 class="font-bold text-slate-700 mb-4">Funcionários por Departamento</h4>
+                <p class="text-xs text-slate-500 mb-4">Visualização da relação <code>funcionarios</code> -> <code>departamentos</code>.</p>
+                <div class="chart-container">
+                    <canvas id="deptChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Exercises Section -->
+    <section id="exercises" class="border-t border-slate-200 pt-12">
+        <div class="mb-6">
+            <h3 class="text-2xl font-bold text-slate-800">Exercícios de Fixação</h3>
+            <p class="text-slate-600">Pratique os conceitos aprendidos.</p>
+        </div>
+
+        <div class="space-y-4">
+            <details class="group bg-white rounded-lg border border-slate-200 shadow-sm">
+                <summary class="flex justify-between items-center p-4 cursor-pointer list-none hover:bg-slate-50">
+                    <span class="font-bold text-slate-700">Nível Básico</span>
+                    <span class="transition group-open:rotate-180">▼</span>
+                </summary>
+                <div class="p-4 border-t border-slate-100 text-sm text-slate-600 space-y-2">
+                    <p>1. Insira um novo departamento: "Recursos Humanos".</p>
+                    <p>2. Adicione coluna <code>site</code> em <code>projetos</code> (ALTER TABLE).</p>
+                    <p>3. Atualize o CNPJ de 'Alice Silva'.</p>
+                    <p>4. Exclua o projeto 501 (Verifique dependências).</p>
+                    <p>5. SELECT apenas nome_social e telefone.</p>
+                </div>
+            </details>
+
+            <details class="group bg-white rounded-lg border border-slate-200 shadow-sm">
+                <summary class="flex justify-between items-center p-4 cursor-pointer list-none hover:bg-slate-50">
+                    <span class="font-bold text-slate-700">Nível Intermediário</span>
+                    <span class="transition group-open:rotate-180">▼</span>
+                </summary>
+                <div class="p-4 border-t border-slate-100 text-sm text-slate-600 space-y-2">
+                    <p>6. Crie tabela <code>alocacao</code> (id_func, id_projeto, horas) -> Relacionamento N:M.</p>
+                    <p>7. Torne o campo <code>email</code> UNIQUE.</p>
+                    <p>8. SELECT projetos com orçamento > 150k.</p>
+                    <p>9. Mude 'Bruno Souza' para o RH.</p>
+                    <p>10. Tente inserir funcionário em Depto 999 (Erro FK).</p>
+                </div>
+            </details>
+
+            <details class="group bg-white rounded-lg border border-slate-200 shadow-sm">
+                <summary class="flex justify-between items-center p-4 cursor-pointer list-none hover:bg-slate-50">
+                    <span class="font-bold text-blue-700">🚀 Desafio Extra</span>
+                    <span class="transition group-open:rotate-180">▼</span>
+                </summary>
+                <div class="p-4 border-t border-slate-100 text-sm text-slate-600 space-y-2 bg-blue-50">
+                    <p class="font-bold">Cenário: Qualidade de Dados</p>
+                    <p>1. Identifique CNPJs com tamanho incorreto (!= 18 chars).</p>
+                    <p>2. Proponha separação de DDD e Telefone para relatórios regionais.</p>
+                </div>
+            </details>
+        </div>
+    </section>
+
+</main>
+
+<!-- JS Logic -->
+<script>
+    // State
+    let currentStep = 0;
+    let db = {
+        funcionarios: [],
+        departamentos: [],
+        projetos: []
+    };
+    // Charts
+    let budgetChartInstance = null;
+    let deptChartInstance = null;
+
+    // --- Logic Functions ---
+
+    function runLab(step) {
+        currentStep = step;
+        updateUI(step);
+        logSQL(step);
+        
+        // Unlock next button logic
+        const nextBtn = document.getElementById(`btn-${step + 1}`);
+        if(nextBtn) {
+            nextBtn.disabled = false;
+            nextBtn.classList.remove('bg-slate-100', 'text-slate-400', 'cursor-not-allowed');
+            nextBtn.classList.add('bg-white', 'border-slate-300', 'hover:border-blue-500', 'text-blue-700', 'shadow-sm');
+            
+            // Update Badge Style
+            const badge = document.getElementById(`badge-${step + 1}`);
+            badge.classList.remove('bg-slate-100', 'text-slate-500', 'border-slate-300');
+            badge.classList.add('bg-blue-100', 'text-blue-600', 'border-blue-600');
+        }
+
+        // Disable current
+        const currBtn = document.getElementById(`btn-${step}`);
+        currBtn.disabled = true;
+        currBtn.classList.add('bg-green-50', 'text-green-700', 'border-green-200');
+        currBtn.innerHTML += ' ✓';
+
+        // Specific Data Logic
+        if(step === 5) {
+            populateData();
+            showAnalytics();
+        }
+    }
+
+    function populateData() {
+        // Lesson Data
+        db.departamentos = [
+            {id: 1, nome: 'TI - Infraestrutura'},
+            {id: 2, nome: 'Desenvolvimento'}
+        ];
+        db.projetos = [
+            {id: 501, nome: 'Migração AWS', orcamento: 250000},
+            {id: 502, nome: 'App Mobile Watson', orcamento: 120000}
+        ];
+        db.funcionarios = [
+            {id: 10, nome: 'Alice Silva', cnpj: '00.000.../91', tel: '(14) 9999-8888', email: 'alice@ibm.com', dept: 2},
+            {id: 20, nome: 'Bruno Souza', cnpj: '00.000.../92', tel: '(11) 7777-6666', email: 'bruno@ibm.com', dept: 1}
+        ];
+        renderTableData();
+    }
+
+    function logSQL(step) {
+        const log = document.getElementById('sql-log');
+        let msg = '';
+        switch(step) {
+            case 1: msg = 'CREATE TABLE funcionarios (id INT PK, nome VARCHAR, cnpj VARCHAR, telefone VARCHAR);'; break;
+            case 2: msg = 'ALTER TABLE funcionarios ADD COLUMN data_nascimento DATE;\nALTER TABLE funcionarios ADD COLUMN email VARCHAR(100);'; break;
+            case 3: msg = 'CREATE TABLE departamentos (id INT PK, nome VARCHAR);\nCREATE TABLE projetos (id INT PK, nome VARCHAR, orcamento DECIMAL);'; break;
+            case 4: msg = 'ALTER TABLE funcionarios ADD COLUMN id_depto INT;\nALTER TABLE funcionarios ADD CONSTRAINT fk_func_depto FOREIGN KEY...'; break;
+            case 5: msg = 'INSERT INTO departamentos VALUES (1, "TI"), (2, "Dev");\nINSERT INTO projetos VALUES (501, "AWS", 250k)... \nINSERT INTO funcionarios VALUES (Alice...), (Bruno...);'; break;
+        }
+        const line = document.createElement('div');
+        line.className = 'mb-2 font-mono text-xs';
+        line.innerHTML = `<span class="text-green-400">➜</span> <span class="text-blue-200">${msg}</span>`;
+        log.appendChild(line);
+        log.scrollTop = log.scrollHeight;
+    }
+
+    function updateUI(step) {
+        // Schema Cards Logic
+        const cardFunc = document.getElementById('card-func');
+        const cardDept = document.getElementById('card-dept');
+        const cardProj = document.getElementById('card-proj');
+        const colsFunc = document.getElementById('cols-func');
+        const colsDept = document.getElementById('cols-dept');
+        const colsProj = document.getElementById('cols-proj');
+
+        if (step >= 1) {
+            cardFunc.classList.remove('opacity-50');
+            cardFunc.classList.add('active');
+            colsFunc.innerHTML = `
+                <li class="flex items-center">id <span class="col-badge pk">PK</span></li>
+                <li>nome_social</li>
+                <li>cnpj</li>
+                <li>telefone</li>
+            `;
+        }
+        if (step >= 2) {
+            colsFunc.innerHTML += `
+                <li class="flex items-center">data_nasc <span class="col-badge new">NEW</span></li>
+                <li class="flex items-center">email <span class="col-badge new">NEW</span></li>
+            `;
+        }
+        if (step >= 3) {
+            cardDept.classList.remove('opacity-25');
+            cardProj.classList.remove('opacity-25');
+            colsDept.innerHTML = `
+                <li class="flex items-center">id_depto <span class="col-badge pk">PK</span></li>
+                <li>nome_depto</li>
+            `;
+            colsProj.innerHTML = `
+                <li class="flex items-center">id_projeto <span class="col-badge pk">PK</span></li>
+                <li>nome_projeto</li>
+                <li>orcamento</li>
+            `;
+        }
+        if (step >= 4) {
+            colsFunc.innerHTML += `
+                <li class="flex items-center text-blue-600 font-bold">id_depto <span class="col-badge fk">FK</span></li>
+            `;
+        }
+
+        renderTableData();
+    }
+
+    function renderTableData() {
+        const thead = document.getElementById('thead-func');
+        const tbody = document.getElementById('tbody-func');
+        const rowCount = document.getElementById('row-count');
+
+        // Headers
+        let headers = ['id', 'nome', 'cnpj', 'tel'];
+        if(currentStep >= 2) headers.push('email', 'nasc');
+        if(currentStep >= 4) headers.push('id_depto');
+        
+        thead.innerHTML = `<tr>${headers.map(h => `<th class="p-3">${h}</th>`).join('')}</tr>`;
+
+        // Body
+        if(db.funcionarios.length === 0) {
+             tbody.innerHTML = '<tr><td colspan="'+headers.length+'" class="p-4 text-center text-slate-400 italic">0 rows (Tabela Criada)</td></tr>';
+             rowCount.innerText = "0 rows";
+        } else {
+            tbody.innerHTML = db.funcionarios.map(f => `
+                <tr class="bg-white border-b hover:bg-slate-50">
+                    <td class="p-3 font-mono">${f.id}</td>
+                    <td class="p-3 font-bold text-slate-700">${f.nome}</td>
+                    <td class="p-3 font-mono text-xs">${f.cnpj}</td>
+                    <td class="p-3 font-mono text-xs">${f.tel}</td>
+                    <td class="p-3 text-xs">${f.email}</td>
+                    <td class="p-3 text-xs text-slate-400">NULL</td>
+                    <td class="p-3 font-mono text-blue-600 font-bold">${f.dept}</td>
+                </tr>
+            `).join('');
+            rowCount.innerText = db.funcionarios.length + " rows";
+        }
+    }
+
+    function showAnalytics() {
+        const section = document.getElementById('analytics');
+        section.classList.remove('hidden');
+        setTimeout(() => section.classList.remove('opacity-0'), 100);
+
+        // Chart 1: Budget
+        const ctxBudget = document.getElementById('budgetChart').getContext('2d');
+        new Chart(ctxBudget, {
+            type: 'bar',
+            data: {
+                labels: db.projetos.map(p => p.nome),
+                datasets: [{
+                    label: 'Orçamento (R$)',
+                    data: db.projetos.map(p => p.orcamento),
+                    backgroundColor: ['#3B82F6', '#10B981'],
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+
+        // Chart 2: Dept Dist
+        const ctxDept = document.getElementById('deptChart').getContext('2d');
+        
+        // Calculate headcount
+        const counts = [0, 0]; // Index 0 = ID 1, Index 1 = ID 2
+        db.funcionarios.forEach(f => {
+            if(f.dept === 1) counts[0]++;
+            if(f.dept === 2) counts[1]++;
+        });
+
+        new Chart(ctxDept, {
+            type: 'doughnut',
+            data: {
+                labels: db.departamentos.map(d => d.nome),
+                datasets: [{
+                    data: counts,
+                    backgroundColor: ['#6366F1', '#F59E0B'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+    }
+
+    // Init
+    window.addEventListener('load', () => {
+        logSQL(0); // init log
+    });
+
+</script>
+</body> </html>
