@@ -18,29 +18,36 @@ USE `aula`;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `fornecedores`
+-- Table structure for table `funcionarios`
 --
 
-DROP TABLE IF EXISTS `fornecedores`;
+DROP TABLE IF EXISTS `funcionarios`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `fornecedores` (
+CREATE TABLE `funcionarios` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `nome_social` varchar(150) NOT NULL,
-  `cnpj` varchar(18) NOT NULL,
-  `telefone` varchar(20) DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  `nome_social` varchar(50) NOT NULL,
+  `cpf` varchar(11) NOT NULL,
+  `cnpj` varchar(11) DEFAULT NULL,
+  `telefone` varchar(11) DEFAULT NULL,
+  `data_nascimento` date DEFAULT NULL,
+  `email` varchar(100) DEFAULT NULL,
+  `id_depto` int DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `cpf` (`cpf`),
+  KEY `fk_func_depto` (`id_depto`),
+  CONSTRAINT `fk_func_depto` FOREIGN KEY (`id_depto`) REFERENCES `departamentos` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `fornecedores`
+-- Dumping data for table `funcionarios`
 --
 
-LOCK TABLES `fornecedores` WRITE;
-/*!40000 ALTER TABLE `fornecedores` DISABLE KEYS */;
-INSERT INTO `fornecedores` VALUES (1,'MINHA EMPRESA','67898000190','14-990908877'),(2,'PETROBRAS','67890989870','14-998808877');
-/*!40000 ALTER TABLE `fornecedores` ENABLE KEYS */;
+LOCK TABLES `funcionarios` WRITE;
+/*!40000 ALTER TABLE `funcionarios` DISABLE KEYS */;
+INSERT INTO `funcionarios` VALUES (1,'Fulano de Tal','11199988800',NULL,'1498980000',NULL,'fulano@gmail.com',3);
+/*!40000 ALTER TABLE `funcionarios` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 

@@ -18,29 +18,27 @@ USE `aula`;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `fornecedores`
+-- Table structure for table `departamentos`
 --
 
-DROP TABLE IF EXISTS `fornecedores`;
+DROP TABLE IF EXISTS `departamentos`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `fornecedores` (
+CREATE TABLE `departamentos` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `nome_social` varchar(150) NOT NULL,
-  `cnpj` varchar(18) NOT NULL,
-  `telefone` varchar(20) DEFAULT NULL,
+  `nome` varchar(50) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `fornecedores`
+-- Dumping data for table `departamentos`
 --
 
-LOCK TABLES `fornecedores` WRITE;
-/*!40000 ALTER TABLE `fornecedores` DISABLE KEYS */;
-INSERT INTO `fornecedores` VALUES (1,'MINHA EMPRESA','67898000190','14-990908877'),(2,'PETROBRAS','67890989870','14-998808877');
-/*!40000 ALTER TABLE `fornecedores` ENABLE KEYS */;
+LOCK TABLES `departamentos` WRITE;
+/*!40000 ALTER TABLE `departamentos` DISABLE KEYS */;
+INSERT INTO `departamentos` VALUES (1,'TI'),(2,'DESENVOLVIMENTO'),(3,'COMERCIAL');
+/*!40000 ALTER TABLE `departamentos` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
