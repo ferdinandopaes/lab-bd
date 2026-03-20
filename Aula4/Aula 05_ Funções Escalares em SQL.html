@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<!-- saved from url=(0061)file:///Users/ferdinandopaes/Workspace/lab-bd/Aula4/aula.html -->
+<html lang="pt-BR"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aula 05: Funções Escalares em SQL</title>
+<script src="./Aula 05_ Funções Escalares em SQL_files/saved_resource"></script>
+<script src="./Aula 05_ Funções Escalares em SQL_files/chart.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
+
+    body {
+        font-family: 'Inter', sans-serif;
+        background-color: #F8FAFC;
+        color: #0F172A;
+    }
+
+    .font-mono {
+        font-family: 'JetBrains Mono', monospace;
+    }
+
+    .chart-container {
+        position: relative;
+        width: 100%;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+        height: 40vh;
+        max-height: 400px;
+    }
+
+    @media (min-width: 768px) {
+        .chart-container {
+            height: 350px;
+        }
+    }
+
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+        background: #E2E8F0; 
+    }
+    ::-webkit-scrollbar-thumb {
+        background: #94A3B8; 
+        border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: #64748B; 
+    }
+
+    .btn-active {
+        background-color: #2563EB;
+        color: #FFFFFF;
+        border-color: #1D4ED8;
+        box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.4);
+    }
+    
+    .code-snippet {
+        display: none;
+    }
+    
+    .code-snippet.active {
+        display: block;
+        animation: fadeIn 0.3s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-5px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+<style>*, ::before, ::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/* ! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com */*,::after,::before{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}::after,::before{--tw-content:''}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0;padding:0}legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.relative{position:relative}.sticky{position:sticky}.top-0{top:0px}.z-10{z-index:10}.z-50{z-index:50}.mx-auto{margin-left:auto;margin-right:auto}.mb-2{margin-bottom:0.5rem}.mb-4{margin-bottom:1rem}.mb-6{margin-bottom:1.5rem}.mb-8{margin-bottom:2rem}.mt-1{margin-top:0.25rem}.mt-2{margin-top:0.5rem}.mt-4{margin-top:1rem}.mt-6{margin-top:1.5rem}.inline-block{display:inline-block}.flex{display:flex}.grid{display:grid}.hidden{display:none}.h-16{height:4rem}.h-8{height:2rem}.w-8{width:2rem}.w-full{width:100%}.max-w-3xl{max-width:48rem}.max-w-7xl{max-width:80rem}.cursor-pointer{cursor:pointer}.grid-cols-1{grid-template-columns:repeat(1, minmax(0, 1fr))}.items-center{align-items:center}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.gap-3{gap:0.75rem}.gap-6{gap:1.5rem}.space-y-12 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(3rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(3rem * var(--tw-space-y-reverse))}.space-y-2 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.5rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.5rem * var(--tw-space-y-reverse))}.space-y-3 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.75rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.75rem * var(--tw-space-y-reverse))}.space-y-4 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1rem * var(--tw-space-y-reverse))}.space-y-6 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1.5rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1.5rem * var(--tw-space-y-reverse))}.divide-y > :not([hidden]) ~ :not([hidden]){--tw-divide-y-reverse:0;border-top-width:calc(1px * calc(1 - var(--tw-divide-y-reverse)));border-bottom-width:calc(1px * var(--tw-divide-y-reverse))}.divide-slate-100 > :not([hidden]) ~ :not([hidden]){--tw-divide-opacity:1;border-color:rgb(241 245 249 / var(--tw-divide-opacity, 1))}.overflow-hidden{overflow:hidden}.overflow-x-auto{overflow-x:auto}.rounded{border-radius:0.25rem}.rounded-2xl{border-radius:1rem}.rounded-full{border-radius:9999px}.rounded-lg{border-radius:0.5rem}.rounded-xl{border-radius:0.75rem}.border{border-width:1px}.border-b{border-bottom-width:1px}.border-t{border-top-width:1px}.border-purple-200{--tw-border-opacity:1;border-color:rgb(233 213 255 / var(--tw-border-opacity, 1))}.border-slate-100{--tw-border-opacity:1;border-color:rgb(241 245 249 / var(--tw-border-opacity, 1))}.border-slate-200{--tw-border-opacity:1;border-color:rgb(226 232 240 / var(--tw-border-opacity, 1))}.border-slate-300{--tw-border-opacity:1;border-color:rgb(203 213 225 / var(--tw-border-opacity, 1))}.border-slate-700{--tw-border-opacity:1;border-color:rgb(51 65 85 / var(--tw-border-opacity, 1))}.bg-amber-100{--tw-bg-opacity:1;background-color:rgb(254 243 199 / var(--tw-bg-opacity, 1))}.bg-blue-100{--tw-bg-opacity:1;background-color:rgb(219 234 254 / var(--tw-bg-opacity, 1))}.bg-blue-50{--tw-bg-opacity:1;background-color:rgb(239 246 255 / var(--tw-bg-opacity, 1))}.bg-blue-700{--tw-bg-opacity:1;background-color:rgb(29 78 216 / var(--tw-bg-opacity, 1))}.bg-emerald-50{--tw-bg-opacity:1;background-color:rgb(236 253 245 / var(--tw-bg-opacity, 1))}.bg-purple-100{--tw-bg-opacity:1;background-color:rgb(243 232 255 / var(--tw-bg-opacity, 1))}.bg-purple-50{--tw-bg-opacity:1;background-color:rgb(250 245 255 / var(--tw-bg-opacity, 1))}.bg-slate-100{--tw-bg-opacity:1;background-color:rgb(241 245 249 / var(--tw-bg-opacity, 1))}.bg-slate-50{--tw-bg-opacity:1;background-color:rgb(248 250 252 / var(--tw-bg-opacity, 1))}.bg-slate-800{--tw-bg-opacity:1;background-color:rgb(30 41 59 / var(--tw-bg-opacity, 1))}.bg-slate-900{--tw-bg-opacity:1;background-color:rgb(15 23 42 / var(--tw-bg-opacity, 1))}.bg-white{--tw-bg-opacity:1;background-color:rgb(255 255 255 / var(--tw-bg-opacity, 1))}.bg-slate-200{--tw-bg-opacity:1;background-color:rgb(226 232 240 / var(--tw-bg-opacity, 1))}.p-2{padding:0.5rem}.p-3{padding:0.75rem}.p-4{padding:1rem}.p-5{padding:1.25rem}.p-6{padding:1.5rem}.p-8{padding:2rem}.px-1{padding-left:0.25rem;padding-right:0.25rem}.px-2{padding-left:0.5rem;padding-right:0.5rem}.px-4{padding-left:1rem;padding-right:1rem}.py-0\.5{padding-top:0.125rem;padding-bottom:0.125rem}.py-1{padding-top:0.25rem;padding-bottom:0.25rem}.py-3{padding-top:0.75rem;padding-bottom:0.75rem}.py-8{padding-top:2rem;padding-bottom:2rem}.pb-1{padding-bottom:0.25rem}.pb-4{padding-bottom:1rem}.pt-8{padding-top:2rem}.text-left{text-align:left}.text-center{text-align:center}.text-right{text-align:right}.font-mono{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}.text-3xl{font-size:1.875rem;line-height:2.25rem}.text-4xl{font-size:2.25rem;line-height:2.5rem}.text-lg{font-size:1.125rem;line-height:1.75rem}.text-sm{font-size:0.875rem;line-height:1.25rem}.text-xl{font-size:1.25rem;line-height:1.75rem}.text-xs{font-size:0.75rem;line-height:1rem}.font-bold{font-weight:700}.font-medium{font-weight:500}.uppercase{text-transform:uppercase}.leading-relaxed{line-height:1.625}.leading-tight{line-height:1.25}.tracking-wider{letter-spacing:0.05em}.text-amber-300{--tw-text-opacity:1;color:rgb(252 211 77 / var(--tw-text-opacity, 1))}.text-amber-600{--tw-text-opacity:1;color:rgb(217 119 6 / var(--tw-text-opacity, 1))}.text-blue-300{--tw-text-opacity:1;color:rgb(147 197 253 / var(--tw-text-opacity, 1))}.text-blue-600{--tw-text-opacity:1;color:rgb(37 99 235 / var(--tw-text-opacity, 1))}.text-blue-700{--tw-text-opacity:1;color:rgb(29 78 216 / var(--tw-text-opacity, 1))}.text-blue-800{--tw-text-opacity:1;color:rgb(30 64 175 / var(--tw-text-opacity, 1))}.text-emerald-300{--tw-text-opacity:1;color:rgb(110 231 183 / var(--tw-text-opacity, 1))}.text-emerald-700{--tw-text-opacity:1;color:rgb(4 120 87 / var(--tw-text-opacity, 1))}.text-purple-300{--tw-text-opacity:1;color:rgb(216 180 254 / var(--tw-text-opacity, 1))}.text-purple-600{--tw-text-opacity:1;color:rgb(147 51 234 / var(--tw-text-opacity, 1))}.text-purple-700{--tw-text-opacity:1;color:rgb(126 34 206 / var(--tw-text-opacity, 1))}.text-purple-800{--tw-text-opacity:1;color:rgb(107 33 168 / var(--tw-text-opacity, 1))}.text-slate-300{--tw-text-opacity:1;color:rgb(203 213 225 / var(--tw-text-opacity, 1))}.text-slate-400{--tw-text-opacity:1;color:rgb(148 163 184 / var(--tw-text-opacity, 1))}.text-slate-500{--tw-text-opacity:1;color:rgb(100 116 139 / var(--tw-text-opacity, 1))}.text-slate-600{--tw-text-opacity:1;color:rgb(71 85 105 / var(--tw-text-opacity, 1))}.text-slate-700{--tw-text-opacity:1;color:rgb(51 65 85 / var(--tw-text-opacity, 1))}.text-slate-800{--tw-text-opacity:1;color:rgb(30 41 59 / var(--tw-text-opacity, 1))}.text-slate-900{--tw-text-opacity:1;color:rgb(15 23 42 / var(--tw-text-opacity, 1))}.text-white{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.text-yellow-400{--tw-text-opacity:1;color:rgb(250 204 21 / var(--tw-text-opacity, 1))}.antialiased{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}.shadow-inner{--tw-shadow:inset 0 2px 4px 0 rgb(0 0 0 / 0.05);--tw-shadow-colored:inset 0 2px 4px 0 var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-sm{--tw-shadow:0 1px 2px 0 rgb(0 0 0 / 0.05);--tw-shadow-colored:0 1px 2px 0 var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-xl{--tw-shadow:0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 20px 25px -5px var(--tw-shadow-color), 0 8px 10px -6px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.transition{transition-property:color, background-color, border-color, fill, stroke, opacity, box-shadow, transform, filter, -webkit-text-decoration-color, -webkit-backdrop-filter;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter, -webkit-text-decoration-color, -webkit-backdrop-filter;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.transition-transform{transition-property:transform;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.hover\:border-blue-400:hover{--tw-border-opacity:1;border-color:rgb(96 165 250 / var(--tw-border-opacity, 1))}.hover\:bg-slate-50:hover{--tw-bg-opacity:1;background-color:rgb(248 250 252 / var(--tw-bg-opacity, 1))}.hover\:text-blue-600:hover{--tw-text-opacity:1;color:rgb(37 99 235 / var(--tw-text-opacity, 1))}.hover\:shadow-md:hover{--tw-shadow:0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.group[open] .group-open\:rotate-180{--tw-rotate:180deg;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}@media (min-width: 640px){.sm\:px-6{padding-left:1.5rem;padding-right:1.5rem}}@media (min-width: 768px){.md\:flex{display:flex}.md\:grid-cols-3{grid-template-columns:repeat(3, minmax(0, 1fr))}}@media (min-width: 1024px){.lg\:col-span-1{grid-column:span 1 / span 1}.lg\:col-span-3{grid-column:span 3 / span 3}.lg\:grid-cols-4{grid-template-columns:repeat(4, minmax(0, 1fr))}.lg\:px-8{padding-left:2rem;padding-right:2rem}}</style></head>
+<body class="antialiased">
+
+<header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <div class="bg-blue-700 text-white p-2 rounded font-bold text-lg tracking-wider">SQL</div>
+            <div>
+                <h1 class="text-lg font-bold text-slate-900 leading-tight">Database Lab <span class="text-blue-600">05</span></h1>
+                <p class="text-xs text-slate-500">Fatec Garça | Prof. Ferdinando Paes</p>
+            </div>
+        </div>
+        <div class="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600">
+            <a href="file:///Users/ferdinandopaes/Workspace/lab-bd/Aula4/aula.html#teoria" class="hover:text-blue-600 transition">Fundamentos</a>
+            <a href="file:///Users/ferdinandopaes/Workspace/lab-bd/Aula4/aula.html#laboratorio" class="hover:text-blue-600 transition">Laboratório Interativo</a>
+            <a href="file:///Users/ferdinandopaes/Workspace/lab-bd/Aula4/aula.html#exercicios" class="hover:text-blue-600 transition">Exercícios</a>
+        </div>
+    </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+
+    <section id="teoria" class="space-y-6">
+        <div class="bg-slate-900 rounded-2xl p-8 text-white shadow-xl relative overflow-hidden">
+            <div class="relative z-10 max-w-3xl">
+                <h2 class="text-3xl font-bold mb-4">Funções Escalares no MySQL</h2>
+                <p class="text-slate-300 text-lg leading-relaxed mb-6">
+                    Diferente das funções de agregação que sumarizam múltiplas linhas, as <strong>funções escalares</strong> processam dados linha a linha. Elas transformam, calculam e formatam dados brutos em informações prontas para o consumo do usuário final.
+                </p>
+                <div class="bg-slate-800 border border-slate-700 p-4 rounded-lg inline-block">
+                    <span class="text-yellow-400 font-bold">⚠️ Regra de Ouro:</span> Nunca esqueça de utilizar o <code class="bg-slate-900 px-1 py-0.5 rounded text-blue-300 font-mono">AS alias_nome</code> para renomear colunas calculadas.
+                </div>
+            </div>
+        </div>
+
+        <p class="text-slate-600 text-lg">
+            O arsenal de transformação do SQL é dividido em três categorias principais que exploraremos hoje:
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition">
+                <div class="text-4xl mb-4">🧮</div>
+                <h3 class="text-xl font-bold text-slate-800 mb-2">Aritmética e Precisão</h3>
+                <p class="text-sm text-slate-600 mb-4">Realiza cálculos matemáticos em tempo de execução e garante a precisão das casas decimais.</p>
+                <ul class="text-sm font-mono text-blue-700 space-y-2">
+                    <li class="bg-blue-50 p-2 rounded"><span class="font-bold">ROUND(val, d)</span>: Arredonda</li>
+                    <li class="bg-blue-50 p-2 rounded"><span class="font-bold">TRUNCATE(val, d)</span>: Corta</li>
+                </ul>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition">
+                <div class="text-4xl mb-4">🔤</div>
+                <h3 class="text-xl font-bold text-slate-800 mb-2">Manipulação de Strings</h3>
+                <p class="text-sm text-slate-600 mb-4">Formata e limpa textos armazenados no banco, ideal para geração de e-mails e nomes de exibição.</p>
+                <ul class="text-sm font-mono text-emerald-700 space-y-2">
+                    <li class="bg-emerald-50 p-2 rounded"><span class="font-bold">CONCAT(s1, s2)</span>: Une textos</li>
+                    <li class="bg-emerald-50 p-2 rounded"><span class="font-bold">UPPER() / LOWER()</span>: Caixa Alta/Baixa</li>
+                </ul>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition">
+                <div class="text-4xl mb-4">📅</div>
+                <h3 class="text-xl font-bold text-slate-800 mb-2">Datas e Prazos</h3>
+                <p class="text-sm text-slate-600 mb-4">Transforma o padrão YYYY-MM-DD em dados analíticos temporais.</p>
+                <ul class="text-sm font-mono text-purple-700 space-y-2">
+                    <li class="bg-purple-50 p-2 rounded"><span class="font-bold">DATEDIFF(d1, d2)</span>: Dif. em dias</li>
+                    <li class="bg-purple-50 p-2 rounded"><span class="font-bold">DATE_FORMAT()</span>: Formata exibição</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <section id="laboratorio" class="pt-8 border-t border-slate-200">
+        <div class="mb-8">
+            <h2 class="text-3xl font-bold text-slate-800">Laboratório: IBM Global Services</h2>
+            <p class="text-slate-600 mt-2">
+                Neste ambiente simulado, aplicaremos as funções escalares sobre a tabela de folha de pagamento. Selecione uma operação no menu lateral para visualizar a query SQL e a transformação instantânea dos dados na tabela e no gráfico.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <div class="lg:col-span-1 space-y-3">
+                <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Painel de Comandos</h4>
+                
+                <button id="btn-raw" class="w-full text-left px-4 py-3 rounded-lg border border-slate-300 bg-white text-slate-700 font-medium transition hover:border-blue-400 btn-active" onclick="handleInteraction(&#39;raw&#39;)">
+                    1. Dados Brutos (Original)
+                </button>
+                
+                <button id="btn-string" class="w-full text-left px-4 py-3 rounded-lg border border-slate-300 bg-white text-slate-700 font-medium transition hover:border-blue-400" onclick="handleInteraction(&#39;string&#39;)">
+                    2. Funções de String
+                </button>
+                
+                <button id="btn-math" class="w-full text-left px-4 py-3 rounded-lg border border-slate-300 bg-white text-slate-700 font-medium transition hover:border-blue-400" onclick="handleInteraction(&#39;math&#39;)">
+                    3. Aritmética e Precisão
+                </button>
+                
+                <button id="btn-date" class="w-full text-left px-4 py-3 rounded-lg border border-slate-300 bg-white text-slate-700 font-medium transition hover:border-blue-400" onclick="handleInteraction(&#39;date&#39;)">
+                    4. Funções de Data
+                </button>
+
+                <div class="mt-6 bg-slate-900 rounded-lg p-4 shadow-inner">
+                    <div class="text-slate-500 text-xs font-mono mb-2 border-b border-slate-700 pb-1">MySQL Script Executado</div>
+                    
+                    <div id="code-raw" class="code-snippet font-mono text-xs text-blue-300 active">
+SELECT p_nome, u_nome, salario_bruto, data_admissao, departamento
+FROM colaboradores;
+</div>
+
+                    <div id="code-string" class="code-snippet font-mono text-xs text-emerald-300">
+SELECT
+CONCAT(UPPER(u_nome), ', ', p_nome) AS nome_formatado,
+LOWER(CONCAT(p_nome, '.', u_nome, '@ibm.com')) AS email
+FROM colaboradores;
+</div>
+
+                    <div id="code-math" class="code-snippet font-mono text-xs text-amber-300">
+SELECT
+p_nome,
+salario_bruto,
+ROUND(salario_bruto * 0.11, 2) AS inss_arredondado,
+TRUNCATE(salario_bruto * 0.11, 2) AS inss_truncado
+FROM colaboradores;
+</div>
+
+                    <div id="code-date" class="code-snippet font-mono text-xs text-purple-300">
+SELECT
+p_nome,
+DATE_FORMAT(data_admissao, '%d/%m/%Y') AS admissao_br,
+DATEDIFF(CURDATE(), data_admissao) AS dias_empresa,
+FLOOR(DATEDIFF(CURDATE(), data_admissao)/365) AS anos
+FROM colaboradores;
+</div>
+</div>
+</div>
+
+            <div class="lg:col-span-3 space-y-6">
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="bg-slate-50 px-4 py-3 border-b border-slate-200 flex justify-between items-center">
+                        <h3 class="font-bold text-slate-700">Result Grid (Simulação)</h3>
+                        <span class="text-xs font-mono bg-blue-100 text-blue-800 px-2 py-1 rounded">4 rows returned</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left">
+                            <thead id="table-head" class="bg-slate-100 text-slate-600 font-mono text-xs border-b border-slate-200"><tr><th class="p-3">p_nome</th><th class="p-3">u_nome</th><th class="p-3 text-right">salario_bruto</th><th class="p-3 text-center">data_admissao</th><th class="p-3 text-center">departamento</th></tr></thead>
+                            <tbody id="table-body" class="divide-y divide-slate-100 text-slate-700"><tr class="hover:bg-slate-50 transition">
+                    <td class="p-3 font-medium">Ferdinando</td>
+                    <td class="p-3">Paes</td>
+                    <td class="p-3 text-right font-mono">8500.456</td>
+                    <td class="p-3 text-center">2015-03-10</td>
+                    <td class="p-3 text-center"><span class="bg-slate-200 text-slate-700 px-2 py-1 rounded text-xs">TI</span></td>
+                </tr><tr class="hover:bg-slate-50 transition">
+                    <td class="p-3 font-medium">Ana</td>
+                    <td class="p-3">silva</td>
+                    <td class="p-3 text-right font-mono">4200.123</td>
+                    <td class="p-3 text-center">2022-05-20</td>
+                    <td class="p-3 text-center"><span class="bg-slate-200 text-slate-700 px-2 py-1 rounded text-xs">RH</span></td>
+                </tr><tr class="hover:bg-slate-50 transition">
+                    <td class="p-3 font-medium">Carlos</td>
+                    <td class="p-3">Oliveira</td>
+                    <td class="p-3 text-right font-mono">5300.999</td>
+                    <td class="p-3 text-center">2010-12-01</td>
+                    <td class="p-3 text-center"><span class="bg-slate-200 text-slate-700 px-2 py-1 rounded text-xs">Vendas</span></td>
+                </tr><tr class="hover:bg-slate-50 transition">
+                    <td class="p-3 font-medium">Maria</td>
+                    <td class="p-3">Eduarda</td>
+                    <td class="p-3 text-right font-mono">3150.000</td>
+                    <td class="p-3 text-center">2023-10-15</td>
+                    <td class="p-3 text-center"><span class="bg-slate-200 text-slate-700 px-2 py-1 rounded text-xs">TI</span></td>
+                </tr></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="chart-section" class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 hidden">
+                    <div class="mb-4 text-center">
+                        <h3 id="chart-title" class="font-bold text-slate-800">Visualização de Impacto</h3>
+                        <p id="chart-desc" class="text-sm text-slate-500">Descrição gráfica da operação.</p>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="mainChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="exercicios" class="pt-8 border-t border-slate-200">
+        <div class="mb-8">
+            <h2 class="text-3xl font-bold text-slate-800">Centro de Treinamento</h2>
+            <p class="text-slate-600 mt-2">Valide seu aprendizado com a lista de exercícios. Utilize as funções escalares abordadas para chegar aos resultados desejados.</p>
+        </div>
+
+        <div class="space-y-4">
+            <details class="bg-white rounded-xl shadow-sm border border-slate-200 group" open="">
+                <summary class="flex items-center justify-between p-5 font-bold cursor-pointer text-slate-800 hover:bg-slate-50 transition">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">1</div>
+                        Nível Básico
+                    </div>
+                    <span class="text-slate-400 group-open:rotate-180 transition-transform">▼</span>
+                </summary>
+                <div class="p-5 border-t border-slate-100 bg-slate-50 text-slate-700 space-y-3">
+                    <p class="font-mono text-sm bg-white p-3 rounded border border-slate-200">1. Selecione o p_nome de todos os colaboradores em letras minúsculas.</p>
+                    <p class="font-mono text-sm bg-white p-3 rounded border border-slate-200">2. Mostre o salário bruto arredondado para zero casas decimais (número inteiro).</p>
+                    <p class="font-mono text-sm bg-white p-3 rounded border border-slate-200">3. Utilize a função LENGTH() para contar quantos caracteres tem o p_nome de cada colaborador.</p>
+                    <p class="font-mono text-sm bg-white p-3 rounded border border-slate-200">4. Exiba o dia da semana da admissão de cada colaborador.</p>
+                    <p class="font-mono text-sm bg-white p-3 rounded border border-slate-200">5. Faça uma concatenação que retorne: "O colaborador [NOME] trabalha no setor [DEPTO]".</p>
+                </div>
+            </details>
+
+            <details class="bg-white rounded-xl shadow-sm border border-slate-200 group">
+                <summary class="flex items-center justify-between p-5 font-bold cursor-pointer text-slate-800 hover:bg-slate-50 transition">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center">2</div>
+                        Nível Intermediário
+                    </div>
+                    <span class="text-slate-400 group-open:rotate-180 transition-transform">▼</span>
+                </summary>
+                <div class="p-5 border-t border-slate-100 bg-slate-50 text-slate-700 space-y-3">
+                    <p class="font-mono text-sm bg-white p-3 rounded border border-slate-200">6. Calcule um bônus de 5.75% sobre o salário bruto e exiba o resultado truncado em 1 casa decimal.</p>
+                    <p class="font-mono text-sm bg-white p-3 rounded border border-slate-200">7. Extraia apenas o ano da data_admissao dos colaboradores.</p>
+                    <p class="font-mono text-sm bg-white p-3 rounded border border-slate-200">8. Crie um código composto pelas 3 primeiras letras do p_nome em maiúsculo e o ano de admissão (ex: FER2015).</p>
+                    <p class="font-mono text-sm bg-white p-3 rounded border border-slate-200">9. Selecione os colaboradores que foram admitidos há mais de 1000 dias.</p>
+                    <p class="font-mono text-sm bg-white p-3 rounded border border-slate-200">10. Formate o salário bruto para o padrão brasileiro (trocando o ponto da casa decimal por vírgula usando REPLACE).</p>
+                </div>
+            </details>
+
+            <details class="bg-white rounded-xl shadow-sm border border-slate-200 group">
+                <summary class="flex items-center justify-between p-5 font-bold cursor-pointer text-slate-800 hover:bg-slate-50 transition">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center">3</div>
+                        Desafios e Projetos
+                    </div>
+                    <span class="text-slate-400 group-open:rotate-180 transition-transform">▼</span>
+                </summary>
+                <div class="p-5 border-t border-slate-100 bg-slate-50 text-slate-700 space-y-3">
+                    <div class="bg-white p-4 rounded border border-slate-200">
+                        <h4 class="font-bold text-slate-800 mb-2">11. Simulação Financeira</h4>
+                        <p class="text-sm">Calcule o salário líquido subtraindo 11% de INSS e 7% de IRRF. O resultado final deve ser arredondado para 2 casas decimais e exibido com o prefixo "R$ ".</p>
+                    </div>
+                    <div class="bg-white p-4 rounded border border-slate-200">
+                        <h4 class="font-bold text-slate-800 mb-2">12. Análise de RH</h4>
+                        <p class="text-sm">Selecione o nome do colaborador e uma coluna chamada status_ferias. Se o colaborador tiver mais de 365 dias de casa, o status é "PODE TIRAR FERIAS", caso contrário, "AGUARDAR".</p>
+                    </div>
+                    <div class="bg-purple-50 p-4 rounded border border-purple-200 mt-4">
+                        <h4 class="font-bold text-purple-800 mb-2">🚀 Projeto: Relatório de Marketing</h4>
+                        <p class="text-sm text-purple-700">Escreva uma query que retorne o nome formatado como "Iniciais" (ex: F. P.), a data de admissão formatada por extenso e quantos meses faltam para ele completar mais um ano de empresa.</p>
+                    </div>
+                </div>
+            </details>
+        </div>
+    </section>
+
+    <footer class="text-center text-sm text-slate-500 border-t border-slate-200 pt-8 pb-4">
+        <p>Laboratório de Banco de Dados | Fundamentado em Silberschatz, Elmasri &amp; Navathe.</p>
+        <p class="mt-1">Design Interativo gerado para fins educacionais.</p>
+    </footer>
+
+</main>
+
+<script>
+    const rawData = [
+        { id: 1, p_nome: 'Ferdinando', u_nome: 'Paes', salario: 8500.456, admissao: '2015-03-10', depto: 'TI' },
+        { id: 2, p_nome: 'Ana', u_nome: 'silva', salario: 4200.123, admissao: '2022-05-20', depto: 'RH' },
+        { id: 3, p_nome: 'Carlos', u_nome: 'Oliveira', salario: 5300.999, admissao: '2010-12-01', depto: 'Vendas' },
+        { id: 4, p_nome: 'Maria', u_nome: 'Eduarda', salario: 3150.00, admissao: '2023-10-15', depto: 'TI' }
+    ];
+
+    let activeChart = null;
+    const currentDate = new Date();
+
+    function wrapLabel(label) {
+        const MAX_LENGTH = 16;
+        if (label.length <= MAX_LENGTH) return label;
+        const words = label.split(' ');
+        const lines = [];
+        let currentLine = words[0];
+        for (let i = 1; i < words.length; i++) {
+            if ((currentLine + " " + words[i]).length <= MAX_LENGTH) {
+                currentLine += " " + words[i];
+            } else {
+                lines.push(currentLine);
+                currentLine = words[i];
+            }
+        }
+        lines.push(currentLine);
+        return lines;
+    }
+
+    const tooltipConfig = {
+        callbacks: {
+            title: function(tooltipItems) {
+                const item = tooltipItems[0];
+                let label = item.chart.data.labels[item.dataIndex];
+                if (Array.isArray(label)) {
+                    return label.join(' ');
+                } else {
+                    return label;
+                }
+            }
+        }
+    };
+
+    function formatDateBR(dateStr) {
+        const parts = dateStr.split('-');
+        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+
+    function calculateDays(dateStr) {
+        const admission = new Date(dateStr);
+        const diffTime = Math.abs(currentDate - admission);
+        return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    }
+
+    function handleInteraction(type) {
+        document.querySelectorAll('button[id^="btn-"]').forEach(btn => btn.classList.remove('btn-active'));
+        document.getElementById(`btn-${type}`).classList.add('btn-active');
+
+        document.querySelectorAll('.code-snippet').forEach(code => code.classList.remove('active'));
+        document.getElementById(`code-${type}`).classList.add('active');
+
+        const thead = document.getElementById('table-head');
+        const tbody = document.getElementById('table-body');
+        const chartSection = document.getElementById('chart-section');
+        
+        thead.innerHTML = '';
+        tbody.innerHTML = '';
+        
+        if (activeChart) {
+            activeChart.destroy();
+        }
+
+        if (type === 'raw') {
+            chartSection.classList.add('hidden');
+            
+            let headRow = '<tr><th class="p-3">p_nome</th><th class="p-3">u_nome</th><th class="p-3 text-right">salario_bruto</th><th class="p-3 text-center">data_admissao</th><th class="p-3 text-center">departamento</th></tr>';
+            thead.innerHTML = headRow;
+
+            rawData.forEach(row => {
+                let tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition";
+                tr.innerHTML = `
+                    <td class="p-3 font-medium">${row.p_nome}</td>
+                    <td class="p-3">${row.u_nome}</td>
+                    <td class="p-3 text-right font-mono">${row.salario.toFixed(3)}</td>
+                    <td class="p-3 text-center">${row.admissao}</td>
+                    <td class="p-3 text-center"><span class="bg-slate-200 text-slate-700 px-2 py-1 rounded text-xs">${row.depto}</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } 
+        else if (type === 'string') {
+            chartSection.classList.add('hidden');
+
+            let headRow = '<tr><th class="p-3">nome_formatado</th><th class="p-3">email</th></tr>';
+            thead.innerHTML = headRow;
+
+            rawData.forEach(row => {
+                const nomeFormato = `${row.u_nome.toUpperCase()}, ${row.p_nome}`;
+                const email = `${row.p_nome.toLowerCase()}.${row.u_nome.toLowerCase().replace(' ', '')}@ibm.com`;
+                
+                let tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition";
+                tr.innerHTML = `
+                    <td class="p-3 font-medium text-emerald-700">${nomeFormato}</td>
+                    <td class="p-3 text-slate-500">${email}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        else if (type === 'math') {
+            chartSection.classList.remove('hidden');
+            document.getElementById('chart-title').innerText = "Impacto do INSS sobre Salário Bruto";
+            document.getElementById('chart-desc').innerText = "Comparativo do cálculo de 11% simulado.";
+
+            let headRow = '<tr><th class="p-3">p_nome</th><th class="p-3 text-right">salario_bruto</th><th class="p-3 text-right">inss_arredondado</th><th class="p-3 text-right">inss_truncado</th></tr>';
+            thead.innerHTML = headRow;
+
+            const labels = [];
+            const salarios = [];
+            const inssData = [];
+
+            rawData.forEach(row => {
+                const inssArr = Math.round((row.salario * 0.11) * 100) / 100;
+                const inssTrun = Math.trunc((row.salario * 0.11) * 100) / 100;
+                
+                labels.push(wrapLabel(row.p_nome));
+                salarios.push(row.salario);
+                inssData.push(inssArr);
+
+                let tr = document.createElement('tr');
+                tr.className = "hover:bg-amber-50 transition";
+                tr.innerHTML = `
+                    <td class="p-3 font-medium">${row.p_nome}</td>
+                    <td class="p-3 text-right font-mono text-slate-500">${row.salario.toFixed(2)}</td>
+                    <td class="p-3 text-right font-mono font-bold text-amber-600">${inssArr.toFixed(2)}</td>
+                    <td class="p-3 text-right font-mono text-amber-800">${inssTrun.toFixed(2)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            activeChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Salário Bruto',
+                            data: salarios,
+                            backgroundColor: '#94A3B8',
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Desconto INSS (11%)',
+                            data: inssData,
+                            backgroundColor: '#F59E0B',
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: tooltipConfig
+                    },
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+        else if (type === 'date') {
+            chartSection.classList.remove('hidden');
+            document.getElementById('chart-title').innerText = "Distribuição de Tempo de Casa (Anos)";
+            document.getElementById('chart-desc').innerText = "Visão agrupada baseada no cálculo de DATEDIFF.";
+
+            let headRow = '<tr><th class="p-3">p_nome</th><th class="p-3 text-center">admissao_br</th><th class="p-3 text-center">dias_empresa</th><th class="p-3 text-center">anos_completos</th></tr>';
+            thead.innerHTML = headRow;
+
+            const labels = [];
+            const anosData = [];
+
+            rawData.forEach(row => {
+                const admissaoBR = formatDateBR(row.admissao);
+                const dias = calculateDays(row.admissao);
+                const anos = Math.floor(dias / 365);
+                
+                labels.push(wrapLabel(row.p_nome));
+                anosData.push(anos);
+
+                let tr = document.createElement('tr');
+                tr.className = "hover:bg-purple-50 transition";
+                tr.innerHTML = `
+                    <td class="p-3 font-medium">${row.p_nome}</td>
+                    <td class="p-3 text-center text-slate-500">${admissaoBR}</td>
+                    <td class="p-3 text-center font-mono">${dias}</td>
+                    <td class="p-3 text-center font-mono font-bold text-purple-600">${anos}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            activeChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: anosData,
+                        backgroundColor: ['#6366F1', '#8B5CF6', '#D946EF', '#F43F5E'],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: tooltipConfig,
+                        legend: { position: 'right' }
+                    }
+                }
+            });
+        }
+    }
+
+    window.onload = function() {
+        handleInteraction('raw');
+    };
+</script>
+
+
+</body></html>
