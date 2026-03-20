@@ -1,0 +1,452 @@
+<!-- Chosen Palette: Warm Harmony (Stone 50, Teal 600, Orange 500) -->
+<!-- Application Structure Plan: 
+    A aplicação é um "Laboratório de Saneamento de Dados". 
+    1. Painel de Dados Sujos: Mostra uma tabela com nomes mal formatados, datas em padrões mistos e valores numéricos com excesso de decimais.
+    2. Console de Transformação: O usuário clica em "Aplicar Saneamento" e o JavaScript executa as funções escalares simuladas.
+    3. Visualização de Impacto: Um gráfico de barras comparando "Salário Bruto" vs "Salário Líquido" (calculado via funções aritméticas) e um gráfico de rosca mostrando a distribuição de "Tempo de Casa" (calculado via funções de data).
+    4. Seção de Exercícios: Lista detalhada de exercícios dividida entre 'Em Aula' e 'Para Casa'.
+-->
+<!-- Visualization & Content Choices: 
+    - Goal: Inform -> Tabelas comparativas Antes/Depois.
+    - Goal: Compare -> Bar Chart (Chart.js) para cálculos de impostos.
+    - Goal: Change -> Timeline de funções de data.
+    - Goal: Organize -> Accordion para os 22 novos exercícios.
+    CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. 
+-->
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reforço: Funções Escalares em SQL</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FAFAF9;
+            color: #44403C;
+        }
+
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            height: 300px;
+            max-height: 400px;
+        }
+
+        .dirty-data {
+            color: #B91C1C;
+            text-decoration: underline wavy #FECACA;
+        }
+
+        .clean-data {
+            color: #0D9488;
+            font-weight: 600;
+        }
+
+        .sql-card {
+            transition: all 0.3s ease;
+        }
+        .sql-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-stone-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="bg-teal-600 text-white p-2 rounded-lg font-bold">SQL+</div>
+                <div>
+                    <h1 class="text-lg font-bold text-stone-800 leading-tight">Aula de Reforço: Funções Escalares</h1>
+                    <p class="text-xs text-stone-500">Fatec Garça | Prof. Ferdinando Paes</p>
+                </div>
+            </div>
+            <nav class="hidden md:flex gap-6 text-sm font-medium">
+                <a href="#teoria" class="hover:text-teal-600">Aprofundamento</a>
+                <a href="#lab" class="hover:text-teal-600">Laboratório</a>
+                <a href="#exercicios" class="hover:text-teal-600">Exercícios</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-16">
+
+        <!-- Intro/Theory Section -->
+        <section id="teoria" class="space-y-8">
+            <div class="border-l-4 border-orange-500 pl-6">
+                <h2 class="text-3xl font-bold text-stone-800">Por que reforçar Funções Escalares?</h2>
+                <p class="mt-4 text-lg text-stone-600 leading-relaxed">
+                    Em um ambiente real, os dados chegam "sujos": nomes em minúsculo, espaços extras, CPFs sem máscara e datas em formatos incompatíveis. 
+                    As <strong>funções escalares</strong> são as ferramentas de saneamento que garantem a qualidade da informação antes dela chegar ao dashboard do CEO.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Aprofundamento Strings -->
+                <div class="bg-white p-6 rounded-xl border border-stone-200 sql-card">
+                    <h3 class="text-xl font-bold text-teal-700 mb-4 flex items-center gap-2">
+                        <span>🔤</span> Strings Avançadas
+                    </h3>
+                    <p class="text-sm text-stone-600 mb-4">Além do básico, precisamos de precisão no corte e preenchimento.</p>
+                    <ul class="space-y-3 text-sm">
+                        <li class="bg-stone-50 p-2 rounded">
+                            <code class="text-teal-600 font-bold">LPAD / RPAD:</code> Preenche com caracteres à esquerda/direita (útil para CPFs e zeros à esquerda).
+                        </li>
+                        <li class="bg-stone-50 p-2 rounded">
+                            <code class="text-teal-600 font-bold">TRIM / LTRIM / RTRIM:</code> Remove espaços inúteis que quebram filtros de busca.
+                        </li>
+                        <li class="bg-stone-50 p-2 rounded">
+                            <code class="text-teal-600 font-bold">REPLACE:</code> Limpeza de máscaras (ex: tirar '.' e '-' de documentos).
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Aprofundamento Matemático -->
+                <div class="bg-white p-6 rounded-xl border border-stone-200 sql-card">
+                    <h3 class="text-xl font-bold text-orange-700 mb-4 flex items-center gap-2">
+                        <span>🔢</span> Matemática de Precisão
+                    </h3>
+                    <p class="text-sm text-stone-600 mb-4">Em finanças, a diferença entre <code>ROUND</code> e <code>TRUNCATE</code> pode significar milhões.</p>
+                    <ul class="space-y-3 text-sm">
+                        <li class="bg-stone-50 p-2 rounded">
+                            <code class="text-orange-600 font-bold">ABS / MOD:</code> Valor absoluto e resto da divisão (útil para algoritmos de validação).
+                        </li>
+                        <li class="bg-stone-50 p-2 rounded">
+                            <code class="text-orange-600 font-bold">POWER / SQRT:</code> Cálculos estatísticos e de juros compostos.
+                        </li>
+                        <li class="bg-stone-50 p-2 rounded">
+                            <code class="text-orange-600 font-bold">COALESCE:</code> Trata o <code class="text-red-500">NULL</code> para não quebrar cálculos matemáticos.
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Aprofundamento Datas -->
+                <div class="bg-white p-6 rounded-xl border border-stone-200 sql-card">
+                    <h3 class="text-xl font-bold text-blue-700 mb-4 flex items-center gap-2">
+                        <span>📅</span> Inteligência Temporal
+                    </h3>
+                    <p class="text-sm text-stone-600 mb-4">Datas não são apenas texto; são intervalos de tempo dinâmicos.</p>
+                    <ul class="space-y-3 text-sm">
+                        <li class="bg-stone-50 p-2 rounded">
+                            <code class="text-blue-600 font-bold">LAST_DAY:</code> Identifica o fechamento do mês automaticamente.
+                        </li>
+                        <li class="bg-stone-50 p-2 rounded">
+                            <code class="text-blue-600 font-bold">DATE_ADD / DATE_SUB:</code> Soma ou subtrai intervalos (dias, meses, anos).
+                        </li>
+                        <li class="bg-stone-50 p-2 rounded">
+                            <code class="text-blue-600 font-bold">TIMESTAMPDIFF:</code> Cálculo preciso de idade ou tempo de casa.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Interactive Lab Section -->
+        <section id="lab" class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
+            <div class="p-8 bg-stone-900 text-white flex flex-col md:flex-row justify-between items-center gap-6">
+                <div>
+                    <h2 class="text-2xl font-bold">Laboratório de Saneamento</h2>
+                    <p class="text-stone-400">Simule a limpeza de dados brutos usando funções SQL.</p>
+                </div>
+                <button onclick="sanitizeData()" class="bg-teal-500 hover:bg-teal-600 text-white px-8 py-3 rounded-lg font-bold transition-all shadow-lg flex items-center gap-2">
+                    <span>✨</span> Aplicar Funções SQL
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 p-8">
+                <!-- Data Table -->
+                <div class="space-y-4">
+                    <h3 class="font-bold text-stone-700 flex items-center gap-2">
+                        <span class="p-1 bg-stone-100 rounded">📊</span> Visualização dos Registros
+                    </h3>
+                    <div class="overflow-x-auto rounded-xl border border-stone-100">
+                        <table class="w-full text-left text-sm border-collapse">
+                            <thead class="bg-stone-50 text-stone-500 font-mono text-xs uppercase">
+                                <tr>
+                                    <th class="p-3">Nome do Colaborador</th>
+                                    <th class="p-3 text-right">Salário Bruto</th>
+                                    <th class="p-3 text-center">Dt. Admissão</th>
+                                </tr>
+                            </thead>
+                            <tbody id="data-body" class="divide-y divide-stone-100">
+                                <!-- JS Populated -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Charts -->
+                <div class="space-y-6">
+                    <div class="bg-stone-50 p-6 rounded-xl border border-stone-100">
+                        <h4 class="text-sm font-bold text-stone-600 mb-4 text-center">Impacto Arritmético (Bruto vs Líquido)</h4>
+                        <div class="chart-container">
+                            <canvas id="salaryChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-teal-50 p-6 border-t border-teal-100 flex flex-col md:flex-row gap-6">
+                <div class="flex-1">
+                    <h4 class="font-bold text-teal-800 text-sm mb-2">💡 O que aconteceu?</h4>
+                    <p class="text-sm text-teal-700" id="explanation">
+                        Os dados acima estão no estado bruto. Ao clicar em sanitizar, simulamos o uso de <code class="bg-teal-100 px-1 rounded">UPPER</code>, <code class="bg-teal-100 px-1 rounded">TRIM</code>, <code class="bg-teal-100 px-1 rounded">ROUND</code> e <code class="bg-teal-100 px-1 rounded">DATE_FORMAT</code>.
+                    </p>
+                </div>
+                <div class="flex-1">
+                    <h4 class="font-bold text-teal-800 text-sm mb-2">📜 SQL Equivalente</h4>
+                    <div class="bg-stone-900 text-teal-400 p-3 rounded font-mono text-xs overflow-x-auto">
+                        <pre id="sql-preview">SELECT UPPER(TRIM(nome)), ROUND(salario, 2)...</pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Exercises Section -->
+        <section id="exercicios" class="space-y-8">
+            <div class="flex items-center gap-4">
+                <div class="h-10 w-1 bg-orange-500"></div>
+                <h2 class="text-3xl font-bold text-stone-800">Cadeia de Exercícios de Fixação</h2>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- In-Class Exercises -->
+                <div class="space-y-4">
+                    <h3 class="text-xl font-bold text-stone-700 flex items-center gap-2">
+                        <span class="bg-teal-100 text-teal-700 px-2 py-1 rounded text-sm">EM AULA</span>
+                        Prática Sob Supervisão
+                    </h3>
+                    <div class="space-y-3">
+                        <details class="bg-white border border-stone-200 rounded-lg p-4 group">
+                            <summary class="font-semibold cursor-pointer text-stone-700 flex justify-between items-center list-none">
+                                🏢 Cenário 1: Gestão de Ativos
+                                <span class="group-open:rotate-180 transition-transform">▼</span>
+                            </summary>
+                            <div class="mt-4 text-sm text-stone-600 space-y-3">
+                                <p>1. <strong>Cálculo de Depreciação:</strong> Se um ativo perde 1.5% do valor ao mês, use <code>POWER</code> para calcular o valor de um servidor de R$ 50.000 após 24 meses.</p>
+                                <p>2. <strong>Limpeza de Patrimônio:</strong> Formate códigos de patrimônio (ex: 123) para terem sempre 8 dígitos, preenchendo com zeros à esquerda (ex: 00000123).</p>
+                                <p>3. <strong>Vencimento de Garantia:</strong> Selecione a data atual e use <code>DATE_ADD</code> para projetar o fim da garantia (3 anos à frente).</p>
+                                <p>4. <strong>Iniciais do Gerente:</strong> Extraia as 2 primeiras letras do nome do gerente e concatene com seu ID.</p>
+                                <p>5. <strong>Arredondamento Fiscal:</strong> Exiba o valor dos impostos truncado em 3 casas decimais para auditoria interna.</p>
+                            </div>
+                        </details>
+
+                        <details class="bg-white border border-stone-200 rounded-lg p-4 group">
+                            <summary class="font-semibold cursor-pointer text-stone-700 flex justify-between items-center list-none">
+                                🛒 Cenário 2: E-commerce
+                                <span class="group-open:rotate-180 transition-transform">▼</span>
+                            </summary>
+                            <div class="mt-4 text-sm text-stone-600 space-y-3">
+                                <p>6. <strong>Slug de URL:</strong> Transforme nomes de produtos (ex: "Fone de Ouvido") em "fone-de-ouvido" (Minúsculo + <code>REPLACE</code> de espaço por traço).</p>
+                                <p>7. <strong>Prazo de Entrega:</strong> Use <code>DATEDIFF</code> para mostrar quantos dias uma entrega está atrasada em relação à <code>data_prometida</code>.</p>
+                                <p>8. <strong>Preço Psicológico:</strong> Arredonde preços para terminarem em .99 (Use <code>FLOOR</code> + 0.99).</p>
+                                <p>9. <strong>Ocultar Cartão:</strong> Exiba apenas os 4 últimos dígitos de um cartão, substituindo o restante por '*' (Use <code>REPEAT</code> e <code>RIGHT</code>).</p>
+                                <p>10. <strong>Primeira Compra:</strong> Formate a data da primeira compra como: "Cliente desde: [MÊS EXTENSO] de [ANO]".</p>
+                            </div>
+                        </details>
+                    </div>
+                </div>
+
+                <!-- Homework Exercises -->
+                <div class="space-y-4">
+                    <h3 class="text-xl font-bold text-stone-700 flex items-center gap-2">
+                        <span class="bg-orange-100 text-orange-700 px-2 py-1 rounded text-sm">PARA CASA</span>
+                        Reforço Independente
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="bg-white border border-stone-200 rounded-lg p-4">
+                            <h4 class="font-bold text-stone-800 mb-2">🏗️ Projeto: Auditoria de Logística</h4>
+                            <p class="text-sm text-stone-600 mb-4">Baseado na tabela <code>fretes</code>, realize as seguintes tarefas:</p>
+                            <ul class="text-xs space-y-2 list-decimal pl-4 text-stone-500">
+                                <li>Normalize os nomes das cidades (Caixa alta e sem espaços extras).</li>
+                                <li>Calcule a taxa de seguro (0.8% do valor da carga), arredondando para cima (<code>CEIL</code>).</li>
+                                <li>Identifique cargas que saíram no <code>LAST_DAY</code> do mês.</li>
+                                <li>Crie uma coluna 'Protocolo' unindo o ID da carga, as 3 letras da cidade de origem e o dia da semana da saída.</li>
+                                <li>Calcule o peso médio das cargas truncado em 2 casas decimais.</li>
+                                <li>Substitua ocorrências da palavra "Urgente" por "Prioridade Máxima" na coluna observação.</li>
+                                <li>Verifique a idade da frota calculando a diferença em anos entre hoje e a data de fabricação do veículo.</li>
+                                <li>Mostre o valor do frete com um desconto de 12% aplicado apenas se o valor for superior a R$ 1000 (Use <code>IF</code> ou lógica aritmética).</li>
+                                <li>Extraia o DDD de uma coluna de telefone que está no formato '(XX) YYYYY-YYYY'.</li>
+                                <li>Gere uma data de previsão de entrega somando 5 dias úteis (ignore o tratamento de feriados por enquanto, apenas some 5 dias).</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Final Challenge -->
+        <section class="bg-stone-100 rounded-2xl p-8 border border-stone-200 text-center">
+            <h3 class="text-2xl font-bold text-stone-800 mb-4">🚀 Desafio de Ouro: O "Relatório de Ouro"</h3>
+            <p class="text-stone-600 max-w-2xl mx-auto mb-8">
+                Crie um único comando <code>SELECT</code> que gere uma etiqueta de envio contendo: 
+                O nome do destinatário em <strong>Negrito</strong> (Simulado via texto), o CEP formatado com traço, 
+                o peso da caixa com a unidade 'kg' concatenada, e a data de entrega prevista em formato <code>DD/MM/AAAA</code>.
+            </p>
+            <div class="inline-flex gap-4">
+                <span class="bg-white px-4 py-2 rounded shadow-sm text-xs font-bold text-stone-500 uppercase tracking-widest">Nível: Expert</span>
+                <span class="bg-white px-4 py-2 rounded shadow-sm text-xs font-bold text-stone-500 uppercase tracking-widest">Tempo: 30min</span>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-stone-200 py-12">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="text-stone-500 text-sm">Laboratório de Banco de Dados | Disciplina Prática</p>
+            <p class="text-stone-400 text-xs mt-2">Fundamentado em Elmasri & Navathe e C.J. Date.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Dados do Laboratório
+        let employees = [
+            { id: 1, nome: "  ferdinando paes  ", salario: 8500.456, admissao: "2015-03-10" },
+            { id: 2, nome: "ana silva  ", salario: 4200.1, admissao: "2022-05-20" },
+            { id: 3, nome: "CARLOS OLIVEIRA", salario: 5300.999, admissao: "2010-12-01" },
+            { id: 4, nome: " Maria Eduarda", salario: 3150.0, admissao: "2023-10-15" }
+        ];
+
+        let isClean = false;
+        let salaryChart = null;
+
+        function renderTable() {
+            const body = document.getElementById('data-body');
+            body.innerHTML = '';
+
+            employees.forEach(emp => {
+                const row = document.createElement('tr');
+                row.className = "hover:bg-stone-50 transition";
+                
+                if (isClean) {
+                    const cleanName = emp.nome.trim().toUpperCase();
+                    const cleanSal = emp.salario.toFixed(2);
+                    const cleanDate = emp.admissao.split('-').reverse().join('/');
+                    
+                    row.innerHTML = `
+                        <td class="p-3 clean-data">${cleanName}</td>
+                        <td class="p-3 text-right font-mono text-teal-600">R$ ${cleanSal}</td>
+                        <td class="p-3 text-center text-teal-600">${cleanDate}</td>
+                    `;
+                } else {
+                    row.innerHTML = `
+                        <td class="p-3 dirty-data">${emp.nome}</td>
+                        <td class="p-3 text-right font-mono text-stone-400">${emp.salario}</td>
+                        <td class="p-3 text-center text-stone-400">${emp.admissao}</td>
+                    `;
+                }
+                body.appendChild(row);
+            });
+        }
+
+        function wrapLabel(label) {
+            const MAX_LENGTH = 16;
+            if (label.length <= MAX_LENGTH) return label;
+            const words = label.split(' ');
+            const lines = [];
+            let currentLine = words[0];
+            for (let i = 1; i < words.length; i++) {
+                if ((currentLine + " " + words[i]).length <= MAX_LENGTH) {
+                    currentLine += " " + words[i];
+                } else {
+                    lines.push(currentLine);
+                    currentLine = words[i];
+                }
+            }
+            lines.push(currentLine);
+            return lines;
+        }
+
+        function updateChart() {
+            const ctx = document.getElementById('salaryChart').getContext('2d');
+            
+            const labels = employees.map(e => isClean ? wrapLabel(e.nome.trim().toUpperCase()) : wrapLabel(e.nome));
+            const rawData = employees.map(e => e.salario);
+            const netData = employees.map(e => e.salario * 0.89); // Simulando 11% desconto
+
+            if (salaryChart) salaryChart.destroy();
+
+            salaryChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Salário Bruto',
+                            data: rawData,
+                            backgroundColor: '#E7E5E4',
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Salário Líquido (Reforço: -11%)',
+                            data: netData,
+                            backgroundColor: isClean ? '#0D9488' : '#D6D3D1',
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                title: function(tooltipItems) {
+                                    const item = tooltipItems[0];
+                                    let label = item.chart.data.labels[item.dataIndex];
+                                    return Array.isArray(label) ? label.join(' ') : label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        function sanitizeData() {
+            isClean = !isClean;
+            renderTable();
+            updateChart();
+            
+            const btn = document.querySelector('button[onclick="sanitizeData()"]');
+            const exp = document.getElementById('explanation');
+            const sql = document.getElementById('sql-preview');
+
+            if (isClean) {
+                btn.innerHTML = "<span>⏪</span> Reverter para Bruto";
+                btn.classList.replace('bg-teal-500', 'bg-stone-500');
+                exp.innerHTML = "<strong>Saneamento Aplicado!</strong> Usamos <code>UPPER(TRIM())</code> para o nome, <code>ROUND(..., 2)</code> para o salário e aritmética de data para inverter o padrão ISO.";
+                sql.innerHTML = "SELECT \n  UPPER(TRIM(nome)) AS nome_limpo,\n  ROUND(salario, 2) AS sal_fiscal,\n  DATE_FORMAT(admissao, '%d/%m/%Y') \nFROM colaboradores;";
+            } else {
+                btn.innerHTML = "<span>✨</span> Aplicar Funções SQL";
+                btn.classList.replace('bg-stone-500', 'bg-teal-500');
+                exp.innerHTML = "Os dados acima estão no estado bruto. Ao clicar em sanitizar, simulamos o uso de <code>UPPER</code>, <code>TRIM</code>, <code>ROUND</code> e <code>DATE_FORMAT</code>.";
+                sql.innerHTML = "SELECT p_nome, salario, data_admissao FROM colaboradores;";
+            }
+        }
+
+        // Init
+        window.onload = () => {
+            renderTable();
+            updateChart();
+        };
+    </script>
+</body>
+</html>
