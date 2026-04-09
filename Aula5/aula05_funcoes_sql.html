@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aula 05 — Funções em SQL | Fatec Garça</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #0f1117;
+    --surface:   #181c27;
+    --card:      #1e2333;
+    --border:    #2a3048;
+    --accent:    #4f8ef7;
+    --accent2:   #a78bfa;
+    --accent3:   #34d399;
+    --warn:      #f59e0b;
+    --danger:    #f87171;
+    --text:      #e2e8f0;
+    --muted:     #8892a4;
+    --code-bg:   #111827;
+    --code-text: #a5f3fc;
+    --sidebar-w: 270px;
+    --header-h:  62px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Sora', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  header {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    height: var(--header-h);
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; padding: 0 24px;
+    gap: 16px;
+  }
+  .header-badge {
+    background: var(--accent); color: #fff;
+    font-size: 11px; font-weight: 700; letter-spacing: .08em;
+    text-transform: uppercase; padding: 3px 10px; border-radius: 4px;
+  }
+  .header-title { font-size: 15px; font-weight: 600; }
+  .header-sub   { font-size: 12px; color: var(--muted); }
+  .header-right { margin-left: auto; display: flex; align-items: center; gap: 14px; }
+  .progress-wrap { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+  .progress-bar  { width: 120px; height: 4px; background: var(--border); border-radius: 99px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 99px; transition: width .4s ease; }
+  #progress-label { color: var(--accent); font-weight: 600; }
+
+  .layout { display: flex; margin-top: var(--header-h); min-height: calc(100vh - var(--header-h)); }
+
+  nav.sidebar {
+    position: fixed; top: var(--header-h); left: 0;
+    width: var(--sidebar-w); height: calc(100vh - var(--header-h));
+    background: var(--surface); border-right: 1px solid var(--border);
+    overflow-y: auto; padding: 16px 0 32px; z-index: 90;
+  }
+  .sidebar-section-label {
+    font-size: 10px; font-weight: 700; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--muted); padding: 18px 20px 6px;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 20px; cursor: pointer;
+    border-left: 3px solid transparent;
+    font-size: 13px; color: var(--muted);
+    transition: all .18s; user-select: none;
+  }
+  .nav-item:hover { color: var(--text); background: rgba(79,142,247,.06); }
+  .nav-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(79,142,247,.10); font-weight: 600; }
+  .nav-item .icon { font-size: 16px; width: 20px; text-align: center; flex-shrink: 0; }
+  .nav-done { margin-left: auto; color: var(--accent3); font-size: 13px; }
+
+  main { margin-left: var(--sidebar-w); flex: 1; padding: 40px 48px 80px; max-width: 960px; }
+
+  .section { display: none; animation: fadeIn .3s ease; }
+  .section.active { display: block; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+  .section-hero {
+    padding: 28px 32px; background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; margin-bottom: 28px; position: relative; overflow: hidden;
+  }
+  .section-hero::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+  }
+  .section-hero .tag {
+    display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--accent);
+    background: rgba(79,142,247,.12); border: 1px solid rgba(79,142,247,.25);
+    padding: 3px 10px; border-radius: 99px; margin-bottom: 10px;
+  }
+  .section-hero h1 { font-size: 26px; font-weight: 700; line-height: 1.2; }
+  .section-hero p  { font-size: 14px; color: var(--muted); margin-top: 8px; line-height: 1.7; }
+
+  .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 28px; }
+  .info-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; }
+  .info-card .label { font-size: 10px; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-bottom: 6px; }
+  .info-card .value { font-size: 15px; font-weight: 600; }
+  .info-card .value.accent { color: var(--accent); }
+
+  .content-block { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 28px 32px; margin-bottom: 22px; }
+  .content-block h2 { font-size: 17px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  .content-block h3 { font-size: 14px; font-weight: 600; color: var(--accent2); margin: 20px 0 10px; }
+  .content-block p  { font-size: 14px; color: var(--muted); line-height: 1.75; margin-bottom: 10px; }
+  .content-block ul, .content-block ol { padding-left: 20px; margin-bottom: 12px; }
+  .content-block li { font-size: 14px; color: var(--muted); line-height: 1.75; margin-bottom: 4px; }
+  .content-block li strong { color: var(--text); }
+
+  .obj-list { list-style: none; padding: 0; }
+  .obj-list li { display: flex; gap: 12px; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 14px; color: var(--text); line-height: 1.6; }
+  .obj-list li:last-child { border-bottom: none; }
+  .obj-num { min-width: 26px; height: 26px; background: rgba(79,142,247,.15); color: var(--accent); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
+
+  .code-wrap { background: var(--code-bg); border: 1px solid var(--border); border-radius: 10px; margin: 16px 0; overflow: hidden; }
+  .code-header { display: flex; align-items: center; justify-content: space-between; padding: 8px 16px; border-bottom: 1px solid var(--border); font-size: 11px; color: var(--muted); font-family: 'IBM Plex Mono', monospace; }
+  .code-dots { display: flex; gap: 6px; }
+  .code-dots span { width: 10px; height: 10px; border-radius: 50%; }
+  .code-dots span:nth-child(1) { background: #f87171; }
+  .code-dots span:nth-child(2) { background: #f59e0b; }
+  .code-dots span:nth-child(3) { background: #34d399; }
+  .copy-btn { background: none; border: 1px solid var(--border); color: var(--muted); font-size: 11px; font-family: inherit; padding: 3px 10px; border-radius: 4px; cursor: pointer; transition: all .2s; }
+  .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+  pre { font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; line-height: 1.7; color: var(--code-text); padding: 20px 22px; overflow-x: auto; white-space: pre; }
+  .kw  { color: #818cf8; }
+  .fn  { color: #34d399; }
+  .str { color: #f9a8d4; }
+  .cm  { color: #4b5563; font-style: italic; }
+  .num { color: #f59e0b; }
+
+  .tbl-wrap { overflow-x: auto; margin: 14px 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead th { background: rgba(79,142,247,.12); color: var(--accent); font-weight: 600; padding: 10px 14px; text-align: left; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; border-bottom: 1px solid var(--border); }
+  tbody td { padding: 9px 14px; border-bottom: 1px solid var(--border); color: var(--muted); font-size: 13px; }
+  tbody tr:hover td { background: rgba(255,255,255,.02); }
+  td code, p code, li code { font-family: 'IBM Plex Mono', monospace; font-size: 12px; background: rgba(79,142,247,.12); color: var(--accent); padding: 1px 6px; border-radius: 4px; }
+
+  .callout { display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border-radius: 8px; margin: 14px 0; font-size: 13px; line-height: 1.6; }
+  .callout.warn   { background: rgba(245,158,11,.10); border-left: 3px solid var(--warn);   color: #fde68a; }
+  .callout.tip    { background: rgba(52,211,153,.10);  border-left: 3px solid var(--accent3); color: #6ee7b7; }
+  .callout.danger { background: rgba(248,113,113,.10); border-left: 3px solid var(--danger); color: #fca5a5; }
+  .callout.info   { background: rgba(79,142,247,.10);  border-left: 3px solid var(--accent);  color: #93c5fd; }
+  .callout .ci    { font-size: 18px; flex-shrink: 0; }
+
+  .ex-grid { display: flex; flex-direction: column; gap: 14px; }
+  .ex-card { background: var(--code-bg); border: 1px solid var(--border); border-radius: 10px; padding: 18px 22px; cursor: pointer; transition: border-color .2s; }
+  .ex-card:hover { border-color: var(--accent); }
+  .ex-card.open  { border-color: var(--accent2); }
+  .ex-header { display: flex; align-items: flex-start; gap: 12px; }
+  .ex-badge { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: 3px 9px; border-radius: 99px; flex-shrink: 0; }
+  .ex-badge.basic { background: rgba(52,211,153,.15); color: var(--accent3); }
+  .ex-badge.inter { background: rgba(79,142,247,.15);  color: var(--accent); }
+  .ex-badge.hard  { background: rgba(167,139,250,.15); color: var(--accent2); }
+  .ex-title { font-size: 14px; font-weight: 600; color: var(--text); }
+  .ex-body  { font-size: 13px; color: var(--muted); margin-top: 12px; line-height: 1.7; display: none; }
+  .ex-card.open .ex-body { display: block; }
+  .ex-toggle { margin-left: auto; color: var(--muted); font-size: 12px; }
+
+  .checklist { list-style: none; padding: 0; }
+  .checklist li { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px; color: var(--muted); cursor: pointer; user-select: none; transition: color .2s; }
+  .checklist li:last-child { border-bottom: none; }
+  .checklist li.checked { color: var(--accent3); }
+  .chk-box { width: 20px; height: 20px; border-radius: 5px; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all .2s; font-size: 12px; margin-top: 2px; }
+  .checked .chk-box { background: var(--accent3); border-color: var(--accent3); color: #0f1117; }
+
+  .challenge-box { background: linear-gradient(135deg, rgba(167,139,250,.12), rgba(79,142,247,.08)); border: 1px solid rgba(167,139,250,.3); border-radius: 14px; padding: 30px 32px; margin-bottom: 22px; }
+  .challenge-box h2 { font-size: 20px; font-weight: 700; margin-bottom: 10px; }
+  .challenge-box p  { font-size: 14px; color: var(--muted); line-height: 1.75; margin-bottom: 10px; }
+  .sub-challenge { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px; margin: 12px 0; }
+  .sub-challenge h4 { font-size: 13px; font-weight: 700; color: var(--accent); margin-bottom: 6px; }
+  .sub-challenge p  { font-size: 13px; color: var(--muted); line-height: 1.65; margin-bottom: 0; }
+
+  .biblio-card { display: flex; gap: 16px; align-items: flex-start; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px; margin-bottom: 12px; }
+  .biblio-icon   { font-size: 28px; flex-shrink: 0; }
+  .biblio-author { font-size: 13px; font-weight: 700; }
+  .biblio-book   { font-size: 12px; color: var(--accent2); margin-top: 2px; }
+  .biblio-desc   { font-size: 12px; color: var(--muted); margin-top: 4px; line-height: 1.6; }
+
+  .nav-btns { display: flex; justify-content: space-between; gap: 12px; margin-top: 36px; }
+  .nav-btn { display: flex; align-items: center; gap: 8px; background: var(--card); border: 1px solid var(--border); color: var(--muted); padding: 10px 20px; border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 13px; transition: all .2s; }
+  .nav-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .nav-btn.primary { background: rgba(79,142,247,.15); border-color: rgba(79,142,247,.4); color: var(--accent); font-weight: 600; }
+  .nav-btn:disabled { opacity: .3; cursor: not-allowed; }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-badge">Aula 05</div>
+  <div>
+    <div class="header-title">Funções em SQL</div>
+    <div class="header-sub">Laboratório de Banco de Dados · Fatec Garça</div>
+  </div>
+  <div class="header-right">
+    <div class="progress-wrap">
+      <span>Progresso:</span>
+      <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:12%"></div></div>
+      <span id="progress-label">1/8</span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+
+<nav class="sidebar">
+  <div class="sidebar-section-label">Módulos da Aula</div>
+  <div class="nav-item active" data-target="s1"><span class="icon">📌</span> Identificação <span class="nav-done" id="done-s1"></span></div>
+  <div class="nav-item" data-target="s2"><span class="icon">🎯</span> Objetivos <span class="nav-done" id="done-s2"></span></div>
+  <div class="nav-item" data-target="s3"><span class="icon">📚</span> Fundamentação Teórica <span class="nav-done" id="done-s3"></span></div>
+  <div class="nav-item" data-target="s4"><span class="icon">🛠</span> Laboratório Prático <span class="nav-done" id="done-s4"></span></div>
+  <div class="nav-item" data-target="s5"><span class="icon">🧠</span> Exercícios <span class="nav-done" id="done-s5"></span></div>
+  <div class="nav-item" data-target="s6"><span class="icon">🚀</span> Desafio Extra <span class="nav-done" id="done-s6"></span></div>
+  <div class="nav-item" data-target="s7"><span class="icon">🧾</span> Checklist <span class="nav-done" id="done-s7"></span></div>
+  <div class="nav-item" data-target="s8"><span class="icon">📖</span> Bibliografia <span class="nav-done" id="done-s8"></span></div>
+</nav>
+
+<main>
+
+<!-- S1 IDENTIFICAÇÃO -->
+<div class="section active" id="s1">
+  <div class="section-hero">
+    <div class="tag">Laboratório de Banco de Dados</div>
+    <h1>Aula 05 — Funções em SQL</h1>
+    <p>Domínio completo das funções nativas do MySQL: escalares, de agregação e window functions. Da teoria à prática em cenário real de empresa.</p>
+  </div>
+  <div class="info-grid">
+    <div class="info-card"><div class="label">Número da Aula</div><div class="value accent">05</div></div>
+    <div class="info-card"><div class="label">Unidade</div><div class="value">Fatec Garça</div></div>
+    <div class="info-card"><div class="label">Professor</div><div class="value">Ferdinando Paes</div></div>
+    <div class="info-card"><div class="label">Duração</div><div class="value">04 horas</div></div>
+    <div class="info-card"><div class="label">Ferramentas</div><div class="value">MySQL Workbench · Notepad++</div></div>
+    <div class="info-card"><div class="label">Pré-requisitos</div><div class="value">Aulas 01–04 (SELECT, JOIN, GROUP BY)</div></div>
+  </div>
+  <div class="content-block">
+    <h2><span>🗂</span> Tema da Unidade</h2>
+    <p>Esta aula faz parte da <strong>Unidade 2 – Funções em SQL</strong>. Vamos entender como o MySQL oferece uma biblioteca rica de funções embutidas que resolvem problemas reais do dia a dia: formatar dados, calcular datas, agregar resultados, criar rankings e analisar séries temporais.</p>
+    <div class="callout info"><span class="ci">💡</span><span>Funções são usadas em praticamente <strong>toda query profissional</strong>. Dominar esse conteúdo é o que separa quem "sabe SQL" de quem realmente <strong>trabalha bem com dados</strong>.</span></div>
+  </div>
+  <div class="nav-btns">
+    <button class="nav-btn" disabled>← Anterior</button>
+    <button class="nav-btn primary" onclick="goTo('s2')">Próximo: Objetivos →</button>
+  </div>
+</div>
+
+<!-- S2 OBJETIVOS -->
+<div class="section" id="s2">
+  <div class="section-hero">
+    <div class="tag">Objetivos de Aprendizagem</div>
+    <h1>O que você vai dominar hoje</h1>
+    <p>Ao final desta aula você será capaz de aplicar estes cinco objetivos de forma independente.</p>
+  </div>
+  <div class="content-block">
+    <ul class="obj-list">
+      <li><div class="obj-num">1</div>Compreender o conceito formal de <strong>função em SQL</strong> e diferenciá-la de outros recursos da linguagem (views, subqueries, procedures).</li>
+      <li><div class="obj-num">2</div>Identificar e aplicar as principais categorias: <strong>texto, data, numéricas e controle de fluxo</strong>.</li>
+      <li><div class="obj-num">3</div>Utilizar <strong>funções de agregação</strong> combinadas com <code>GROUP BY</code> e <code>HAVING</code> para produzir relatórios gerenciais reais.</li>
+      <li><div class="obj-num">4</div>Aplicar <strong>Window Functions</strong> básicas (<code>ROW_NUMBER</code>, <code>RANK</code>, <code>LAG</code>) para análises avançadas sem perder o detalhe por linha.</li>
+      <li><div class="obj-num">5</div>Avaliar o <strong>impacto de funções na performance</strong> do SGBD e tomar decisões conscientes de quando e como usá-las.</li>
+    </ul>
+  </div>
+  <div class="nav-btns">
+    <button class="nav-btn" onclick="goTo('s1')">← Identificação</button>
+    <button class="nav-btn primary" onclick="goTo('s3')">Próximo: Teoria →</button>
+  </div>
+</div>
+
+<!-- S3 TEORIA -->
+<div class="section" id="s3">
+  <div class="section-hero">
+    <div class="tag">Fundamentação Teórica</div>
+    <h1>Conceitos, categorias e boas práticas</h1>
+    <p>Base teórica sólida para entender o <em>porquê</em> de cada função antes de codar.</p>
+  </div>
+
+  <div class="content-block">
+    <h2><span>📐</span> O que é uma Função em SQL?</h2>
+    <p>Uma <strong>função</strong> em SQL é um objeto nomeado que recebe zero ou mais argumentos, executa um processamento definido e retorna <strong>um único valor escalar</strong>. Analogia matemática direta: <code>f(x) → y</code>.</p>
+    <p>C.J. Date define função como <em>"uma operação que mapeia um conjunto de valores de entrada em um único valor de saída"</em>. No modelo relacional, funções retornam valores <strong>atômicos</strong> — nunca uma tabela inteira.</p>
+    <div class="callout info"><span class="ci">🔍</span><span>Diferença crucial: <strong>funções</strong> → valor · <strong>views</strong> → tabela · <strong>procedures</strong> → executam comandos sem retornar valor direto.</span></div>
+  </div>
+
+  <div class="content-block">
+    <h2><span>🔤</span> Funções de Texto (String Functions)</h2>
+    <p>Operam <strong>linha por linha</strong>. Para cada linha, a função é chamada uma vez e devolve um valor.</p>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Função</th><th>O que faz</th><th>Exemplo</th></tr></thead>
+      <tbody>
+        <tr><td><code>UPPER(str)</code></td><td>Maiúsculo</td><td><code>UPPER('joao')</code> → <code>'JOAO'</code></td></tr>
+        <tr><td><code>LOWER(str)</code></td><td>Minúsculo</td><td><code>LOWER('ANA')</code> → <code>'ana'</code></td></tr>
+        <tr><td><code>CONCAT(s1,s2)</code></td><td>Concatena</td><td><code>CONCAT('Ana',' Lima')</code></td></tr>
+        <tr><td><code>CONCAT_WS(sep,...)</code></td><td>Concatena com separador, ignora NULL</td><td><code>CONCAT_WS(' ','Ana',NULL,'Lima')</code> → <code>'Ana Lima'</code></td></tr>
+        <tr><td><code>SUBSTRING(str,pos,len)</code></td><td>Extrai parte</td><td><code>SUBSTRING('Fatec',1,3)</code> → <code>'Fat'</code></td></tr>
+        <tr><td><code>TRIM(str)</code></td><td>Remove espaços nas bordas</td><td><code>TRIM(' dado ')</code> → <code>'dado'</code></td></tr>
+        <tr><td><code>REPLACE(str,de,para)</code></td><td>Substitui ocorrências</td><td><code>REPLACE('2024-01-15','-','/')</code></td></tr>
+        <tr><td><code>LPAD(str,len,pad)</code></td><td>Preenche à esquerda</td><td><code>LPAD('7',3,'0')</code> → <code>'007'</code></td></tr>
+        <tr><td><code>LENGTH(str)</code></td><td>Comprimento em bytes</td><td><code>LENGTH('sql')</code> → <code>3</code></td></tr>
+      </tbody>
+    </table></div>
+    <div class="callout warn"><span class="ci">⚠️</span><span><code>CONCAT</code> com qualquer NULL retorna NULL! Prefira <code>CONCAT_WS</code> ou envolva com <code>IFNULL</code>.</span></div>
+  </div>
+
+  <div class="content-block">
+    <h2><span>📅</span> Funções de Data e Hora</h2>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Função</th><th>O que faz</th><th>Exemplo</th></tr></thead>
+      <tbody>
+        <tr><td><code>NOW()</code></td><td>Data e hora atuais</td><td><code>2024-03-15 14:32:00</code></td></tr>
+        <tr><td><code>CURDATE()</code></td><td>Data atual</td><td><code>2024-03-15</code></td></tr>
+        <tr><td><code>DATE_FORMAT(d, fmt)</code></td><td>Formata data</td><td><code>DATE_FORMAT(NOW(),'%d/%m/%Y')</code></td></tr>
+        <tr><td><code>DATEDIFF(d1,d2)</code></td><td>Diferença em dias</td><td><code>DATEDIFF('2024-12-31','2024-01-01')</code> → <code>365</code></td></tr>
+        <tr><td><code>TIMESTAMPDIFF(unit,d1,d2)</code></td><td>Diferença em qualquer unidade</td><td><code>TIMESTAMPDIFF(YEAR, nasc, NOW())</code></td></tr>
+        <tr><td><code>DATE_ADD(d, INTERVAL n u)</code></td><td>Soma intervalo</td><td><code>DATE_ADD(NOW(), INTERVAL 30 DAY)</code></td></tr>
+        <tr><td><code>YEAR/MONTH/DAY(d)</code></td><td>Extrai partes</td><td><code>YEAR('2024-03-15')</code> → <code>2024</code></td></tr>
+      </tbody>
+    </table></div>
+  </div>
+
+  <div class="content-block">
+    <h2><span>🔢</span> Funções Numéricas e Controle de Fluxo</h2>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Função</th><th>O que faz</th><th>Exemplo</th></tr></thead>
+      <tbody>
+        <tr><td><code>ROUND(n, d)</code></td><td>Arredonda</td><td><code>ROUND(3.14159,2)</code> → <code>3.14</code></td></tr>
+        <tr><td><code>CEIL(n)</code></td><td>Arredonda para cima</td><td><code>CEIL(4.1)</code> → <code>5</code></td></tr>
+        <tr><td><code>FLOOR(n)</code></td><td>Arredonda para baixo</td><td><code>FLOOR(4.9)</code> → <code>4</code></td></tr>
+        <tr><td><code>ABS(n)</code></td><td>Valor absoluto</td><td><code>ABS(-15)</code> → <code>15</code></td></tr>
+        <tr><td><code>TRUNCATE(n,d)</code></td><td>Trunca sem arredondar</td><td><code>TRUNCATE(3.99,1)</code> → <code>3.9</code></td></tr>
+        <tr><td><code>IF(cond, v_true, v_false)</code></td><td>Condicional simples</td><td><code>IF(estoque>50,'OK','Repor')</code></td></tr>
+        <tr><td><code>IFNULL(expr, default)</code></td><td>Substitui NULL</td><td><code>IFNULL(email,'sem e-mail')</code></td></tr>
+        <tr><td><code>COALESCE(e1,e2,...)</code></td><td>Primeiro não-NULL</td><td><code>COALESCE(cel,tel,'sem contato')</code></td></tr>
+        <tr><td><code>CASE WHEN...THEN...END</code></td><td>Condicional múltipla</td><td>Classifica faixas, categorias</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+
+  <div class="content-block">
+    <h2><span>📊</span> Funções de Agregação</h2>
+    <p>Operam sobre um <strong>conjunto de linhas</strong> e retornam um único valor resumido. Acompanham <code>GROUP BY</code> ou retornam o total geral.</p>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Função</th><th>Comportamento com NULL</th></tr></thead>
+      <tbody>
+        <tr><td><code>COUNT(*)</code></td><td>Conta todas as linhas, <strong>incluindo NULLs</strong></td></tr>
+        <tr><td><code>COUNT(coluna)</code></td><td>Conta apenas valores <strong>não-NULL</strong></td></tr>
+        <tr><td><code>SUM(coluna)</code></td><td>Ignora NULLs na soma</td></tr>
+        <tr><td><code>AVG(coluna)</code></td><td>Ignora NULLs no numerador E denominador</td></tr>
+        <tr><td><code>MAX/MIN(coluna)</code></td><td>Funciona com texto e datas também</td></tr>
+        <tr><td><code>GROUP_CONCAT(col)</code></td><td>Concatena todos os valores do grupo em uma string</td></tr>
+      </tbody>
+    </table></div>
+    <div class="callout danger"><span class="ci">🚨</span><span><code>AVG</code> ignora NULLs no numerador E denominador. <code>AVG(nota)</code> com NULLs ≠ <code>SUM(nota)/COUNT(*)</code>. Isso quebra muita análise sem que ninguém perceba!</span></div>
+  </div>
+
+  <div class="content-block">
+    <h2><span>🪟</span> Window Functions (MySQL 8.0+)</h2>
+    <p>Calculam sobre um conjunto de linhas relacionadas à linha atual <strong>sem colapsá-las</strong>. Diferença fundamental em relação à agregação: você mantém todas as linhas no resultado.</p>
+    <div class="code-wrap">
+      <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><span>Sintaxe base</span><button class="copy-btn" onclick="copyCode(this)">Copiar</button></div>
+      <pre><span class="fn">função</span>() <span class="kw">OVER</span> (
+    <span class="kw">PARTITION BY</span> coluna_agrupamento
+    <span class="kw">ORDER BY</span>    coluna_ordenação
+    <span class="kw">ROWS BETWEEN</span> <span class="num">1</span> <span class="kw">PRECEDING AND CURRENT ROW</span>
+)</pre>
+    </div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Função</th><th>Propósito</th></tr></thead>
+      <tbody>
+        <tr><td><code>ROW_NUMBER()</code></td><td>Número sequencial único por partição</td></tr>
+        <tr><td><code>RANK()</code></td><td>Posição com empates — pula números</td></tr>
+        <tr><td><code>DENSE_RANK()</code></td><td>Posição com empates — não pula</td></tr>
+        <tr><td><code>LAG(col, n)</code></td><td>Acessa linha n posições atrás</td></tr>
+        <tr><td><code>LEAD(col, n)</code></td><td>Acessa linha n posições à frente</td></tr>
+        <tr><td><code>SUM() OVER()</code></td><td>Soma acumulada ou por partição</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+
+  <div class="content-block">
+    <h2><span>🪤</span> Armadilhas Clássicas</h2>
+    <h3>Erro 1 — Função sobre coluna indexada no WHERE</h3>
+    <div class="code-wrap">
+      <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><span>Performance — Índice x Função</span><button class="copy-btn" onclick="copyCode(this)">Copiar</button></div>
+      <pre><span class="cm">-- ERRADO: full table scan, ignora o índice</span>
+<span class="kw">WHERE</span> <span class="fn">YEAR</span>(data_pedido) = <span class="num">2024</span>
+
+<span class="cm">-- CERTO: aproveita o índice da coluna</span>
+<span class="kw">WHERE</span> data_pedido <span class="kw">BETWEEN</span> <span class="str">'2024-01-01'</span> <span class="kw">AND</span> <span class="str">'2024-12-31'</span></pre>
+    </div>
+    <h3>Erro 2 — Confundir WHERE com HAVING</h3>
+    <div class="code-wrap">
+      <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><span>WHERE vs HAVING</span><button class="copy-btn" onclick="copyCode(this)">Copiar</button></div>
+      <pre><span class="cm">-- ERRADO: HAVING não filtra colunas puras</span>
+<span class="kw">SELECT</span> depto, <span class="fn">COUNT</span>(*) <span class="kw">FROM</span> funcionarios
+<span class="kw">HAVING</span> nome <span class="kw">LIKE</span> <span class="str">'A%'</span>
+
+<span class="cm">-- CERTO: WHERE filtra ANTES; HAVING filtra APÓS a agregação</span>
+<span class="kw">SELECT</span> depto, <span class="fn">COUNT</span>(*) <span class="kw">FROM</span> funcionarios
+<span class="kw">WHERE</span>  nome <span class="kw">LIKE</span> <span class="str">'A%'</span>
+<span class="kw">GROUP BY</span> depto
+<span class="kw">HAVING</span> <span class="fn">COUNT</span>(*) > <span class="num">3</span></pre>
+    </div>
+    <h3>Erro 3 — CONCAT com NULL</h3>
+    <div class="code-wrap">
+      <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><span>NULL em CONCAT</span><button class="copy-btn" onclick="copyCode(this)">Copiar</button></div>
+      <pre><span class="cm">-- ERRADO: sobrenome NULL contamina todo o resultado</span>
+<span class="kw">SELECT</span> <span class="fn">CONCAT</span>(nome, <span class="str">' '</span>, sobrenome) <span class="kw">FROM</span> clientes;
+
+<span class="cm">-- CERTO: CONCAT_WS ignora NULLs automaticamente</span>
+<span class="kw">SELECT</span> <span class="fn">CONCAT_WS</span>(<span class="str">' '</span>, nome, sobrenome) <span class="kw">FROM</span> clientes;</pre>
+    </div>
+  </div>
+
+  <div class="nav-btns">
+    <button class="nav-btn" onclick="goTo('s2')">← Objetivos</button>
+    <button class="nav-btn primary" onclick="goTo('s4')">Próximo: Laboratório →</button>
+  </div>
+</div>
+
+<!-- S4 LABORATÓRIO -->
+<div class="section" id="s4">
+  <div class="section-hero">
+    <div class="tag">Parte Prática</div>
+    <h1>Laboratório — TechVenda Ltda.</h1>
+    <p>Você é analista de banco de dados de um distribuidor de eletrônicos. Execute os scripts em sequência no MySQL Workbench.</p>
+  </div>
+
+  <div class="content-block">
+    <h2><span>🏗</span> Script 1 — Criação do Banco e Tabelas</h2>
+    <div class="code-wrap">
+      <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><span>01_criar_banco.sql</span><button class="copy-btn" onclick="copyCode(this)">Copiar</button></div>
+      <pre><span class="cm">-- ================================================
+-- LABORATÓRIO 05 — FUNÇÕES EM SQL
+-- TechVenda Ltda. | Profº Ferdinando Paes
+-- ================================================</span>
+<span class="kw">CREATE DATABASE IF NOT EXISTS</span> techvenda;
+<span class="kw">USE</span> techvenda;
+
+<span class="kw">CREATE TABLE IF NOT EXISTS</span> categorias (
+    id_categoria <span class="kw">INT AUTO_INCREMENT PRIMARY KEY</span>,
+    nome         <span class="kw">VARCHAR</span>(<span class="num">50</span>) <span class="kw">NOT NULL</span>
+);
+
+<span class="kw">CREATE TABLE IF NOT EXISTS</span> produtos (
+    id_produto   <span class="kw">INT AUTO_INCREMENT PRIMARY KEY</span>,
+    nome         <span class="kw">VARCHAR</span>(<span class="num">100</span>) <span class="kw">NOT NULL</span>,
+    preco        <span class="kw">DECIMAL</span>(<span class="num">10</span>,<span class="num">2</span>) <span class="kw">NOT NULL</span>,
+    estoque      <span class="kw">INT DEFAULT</span> <span class="num">0</span>,
+    id_categoria <span class="kw">INT</span>,
+    <span class="kw">FOREIGN KEY</span> (id_categoria) <span class="kw">REFERENCES</span> categorias(id_categoria)
+);
+
+<span class="kw">CREATE TABLE IF NOT EXISTS</span> clientes (
+    id_cliente    <span class="kw">INT AUTO_INCREMENT PRIMARY KEY</span>,
+    nome          <span class="kw">VARCHAR</span>(<span class="num">80</span>) <span class="kw">NOT NULL</span>,
+    sobrenome     <span class="kw">VARCHAR</span>(<span class="num">80</span>),
+    email         <span class="kw">VARCHAR</span>(<span class="num">120</span>),
+    dt_nascimento <span class="kw">DATE</span>,
+    cidade        <span class="kw">VARCHAR</span>(<span class="num">60</span>),
+    estado        <span class="kw">CHAR</span>(<span class="num">2</span>)
+);
+
+<span class="kw">CREATE TABLE IF NOT EXISTS</span> pedidos (
+    id_pedido  <span class="kw">INT AUTO_INCREMENT PRIMARY KEY</span>,
+    id_cliente <span class="kw">INT NOT NULL</span>,
+    dt_pedido  <span class="kw">DATETIME DEFAULT</span> <span class="fn">NOW</span>(),
+    status     <span class="kw">ENUM</span>(<span class="str">'Pendente'</span>,<span class="str">'Aprovado'</span>,<span class="str">'Cancelado'</span>,<span class="str">'Entregue'</span>),
+    <span class="kw">FOREIGN KEY</span> (id_cliente) <span class="kw">REFERENCES</span> clientes(id_cliente)
+);
+
+<span class="kw">CREATE TABLE IF NOT EXISTS</span> itens_pedido (
+    id_item    <span class="kw">INT AUTO_INCREMENT PRIMARY KEY</span>,
+    id_pedido  <span class="kw">INT NOT NULL</span>,
+    id_produto <span class="kw">INT NOT NULL</span>,
+    quantidade <span class="kw">INT NOT NULL</span>,
+    preco_unit <span class="kw">DECIMAL</span>(<span class="num">10</span>,<span class="num">2</span>) <span class="kw">NOT NULL</span>,
+    <span class="kw">FOREIGN KEY</span> (id_pedido)  <span class="kw">REFERENCES</span> pedidos(id_pedido),
+    <span class="kw">FOREIGN KEY</span> (id_produto) <span class="kw">REFERENCES</span> produtos(id_produto)
+);</pre>
+    </div>
+  </div>
+
+  <div class="content-block">
+    <h2><span>📥</span> Script 2 — Inserção de Dados</h2>
+    <div class="code-wrap">
+      <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><span>02_inserir_dados.sql</span><button class="copy-btn" onclick="copyCode(this)">Copiar</button></div>
+      <pre><span class="kw">USE</span> techvenda;
+
+<span class="kw">INSERT INTO</span> categorias (nome) <span class="kw">VALUES</span>
+    (<span class="str">'Smartphones'</span>), (<span class="str">'Notebooks'</span>), (<span class="str">'Periféricos'</span>),
+    (<span class="str">'Acessórios'</span>), (<span class="str">'Smart TVs'</span>);
+
+<span class="kw">INSERT INTO</span> produtos (nome, preco, estoque, id_categoria) <span class="kw">VALUES</span>
+    (<span class="str">'iPhone 15 Pro'</span>,      <span class="num">8999.90</span>, <span class="num">30</span>, <span class="num">1</span>),
+    (<span class="str">'Samsung Galaxy S24'</span>, <span class="num">5499.00</span>, <span class="num">45</span>, <span class="num">1</span>),
+    (<span class="str">'Dell Inspiron 15'</span>,   <span class="num">4299.00</span>, <span class="num">20</span>, <span class="num">2</span>),
+    (<span class="str">'MacBook Air M2'</span>,    <span class="num">10999.00</span>, <span class="num">12</span>, <span class="num">2</span>),
+    (<span class="str">'Teclado Mecânico'</span>,    <span class="num">389.90</span>, <span class="num">80</span>, <span class="num">3</span>),
+    (<span class="str">'Mouse Sem Fio'</span>,       <span class="num">159.90</span>,<span class="num">150</span>, <span class="num">3</span>),
+    (<span class="str">'Cabo USB-C 2m'</span>,        <span class="num">49.90</span>,<span class="num">300</span>, <span class="num">4</span>),
+    (<span class="str">'Película 3D'</span>,          <span class="num">29.90</span>,<span class="num">500</span>, <span class="num">4</span>),
+    (<span class="str">'Smart TV 55" 4K'</span>,   <span class="num">3899.00</span>, <span class="num">15</span>, <span class="num">5</span>),
+    (<span class="str">'Smart TV 65" QLED'</span>,  <span class="num">6299.00</span>,  <span class="num">8</span>, <span class="num">5</span>);
+
+<span class="kw">INSERT INTO</span> clientes (nome, sobrenome, email, dt_nascimento, cidade, estado) <span class="kw">VALUES</span>
+    (<span class="str">'Ana'</span>,    <span class="str">'Silva'</span>,   <span class="str">'ana@email.com'</span>,    <span class="str">'1990-03-15'</span>, <span class="str">'Garça'</span>,    <span class="str">'SP'</span>),
+    (<span class="str">'Carlos'</span>, <span class="str">'Mendes'</span>,  <span class="str">'carlos@email.com'</span>, <span class="str">'1985-07-22'</span>, <span class="str">'Marília'</span>,  <span class="str">'SP'</span>),
+    (<span class="str">'Beatriz'</span>,<span class="str">'Costa'</span>,   <span class="kw">NULL</span>,               <span class="str">'2000-11-01'</span>, <span class="str">'Bauru'</span>,    <span class="str">'SP'</span>),
+    (<span class="str">'Diego'</span>,  <span class="str">'Rocha'</span>,   <span class="str">'diego@email.com'</span>,  <span class="str">'1978-05-30'</span>, <span class="str">'São Paulo'</span>,<span class="str">'SP'</span>),
+    (<span class="str">'Elaine'</span>, <span class="str">'Ferreira'</span>,<span class="str">'elaine@email.com'</span>, <span class="str">'1995-09-18'</span>, <span class="str">'Campinas'</span>, <span class="str">'SP'</span>),
+    (<span class="str">'Felipe'</span>, <span class="kw">NULL</span>,      <span class="str">'felipe@email.com'</span>, <span class="str">'1988-12-05'</span>, <span class="str">'Garça'</span>,    <span class="str">'SP'</span>),
+    (<span class="str">'Gisele'</span>, <span class="str">'Nunes'</span>,   <span class="str">'gisele@email.com'</span>, <span class="str">'2002-02-14'</span>, <span class="str">'Ourinhos'</span>, <span class="str">'SP'</span>),
+    (<span class="str">'Hugo'</span>,   <span class="str">'Lima'</span>,    <span class="kw">NULL</span>,               <span class="str">'1993-06-25'</span>, <span class="str">'Pr. Prudente'</span>,<span class="str">'SP'</span>);</pre>
+    </div>
+  </div>
+
+  <div class="content-block">
+    <h2><span>🔤</span> Script 3 — Funções de Texto</h2>
+    <div class="code-wrap">
+      <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><span>03_funcoes_texto.sql</span><button class="copy-btn" onclick="copyCode(this)">Copiar</button></div>
+      <pre><span class="cm">-- Nome completo em maiúsculo</span>
+<span class="kw">SELECT</span>
+    <span class="fn">UPPER</span>(<span class="fn">CONCAT_WS</span>(<span class="str">' '</span>, nome, sobrenome)) <span class="kw">AS</span> nome_maiusculo,
+    <span class="fn">LOWER</span>(email)                           <span class="kw">AS</span> email_normalizado
+<span class="kw">FROM</span> clientes;
+
+<span class="cm">-- Máscara de e-mail</span>
+<span class="kw">SELECT</span>
+    nome,
+    <span class="fn">CONCAT</span>(<span class="fn">LEFT</span>(email,<span class="num">3</span>), <span class="str">'***@'</span>,
+           <span class="fn">SUBSTRING_INDEX</span>(email,<span class="str">'@'</span>,-<span class="num">1</span>)) <span class="kw">AS</span> email_mascarado
+<span class="kw">FROM</span> clientes
+<span class="kw">WHERE</span> email <span class="kw">IS NOT NULL</span>;
+
+<span class="cm">-- Código do produto formatado com 5 dígitos</span>
+<span class="kw">SELECT</span>
+    nome,
+    <span class="fn">LENGTH</span>(nome)             <span class="kw">AS</span> tamanho,
+    <span class="fn">LEFT</span>(nome, <span class="num">15</span>)           <span class="kw">AS</span> nome_curto,
+    <span class="fn">LPAD</span>(id_produto, <span class="num">5</span>, <span class="str">'0'</span>) <span class="kw">AS</span> codigo_formatado
+<span class="kw">FROM</span> produtos;</pre>
+    </div>
+  </div>
+
+  <div class="content-block">
+    <h2><span>📅</span> Script 4 — Funções de Data</h2>
+    <div class="code-wrap">
+      <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><span>04_funcoes_data.sql</span><button class="copy-btn" onclick="copyCode(this)">Copiar</button></div>
+      <pre><span class="cm">-- Idade calculada corretamente</span>
+<span class="kw">SELECT</span>
+    <span class="fn">CONCAT_WS</span>(<span class="str">' '</span>, nome, sobrenome)                  <span class="kw">AS</span> cliente,
+    <span class="fn">TIMESTAMPDIFF</span>(<span class="kw">YEAR</span>, dt_nascimento, <span class="fn">CURDATE</span>())   <span class="kw">AS</span> idade_anos
+<span class="kw">FROM</span> clientes
+<span class="kw">ORDER BY</span> idade_anos <span class="kw">DESC</span>;
+
+<span class="cm">-- Relatório mensal de pedidos</span>
+<span class="kw">SELECT</span>
+    <span class="fn">DATE_FORMAT</span>(dt_pedido, <span class="str">'%m/%Y'</span>)                  <span class="kw">AS</span> mes_ano,
+    <span class="fn">COUNT</span>(*)                                          <span class="kw">AS</span> total_pedidos,
+    <span class="fn">SUM</span>(<span class="kw">CASE WHEN</span> status=<span class="str">'Entregue'</span>  <span class="kw">THEN</span> <span class="num">1</span> <span class="kw">ELSE</span> <span class="num">0</span> <span class="kw">END</span>) <span class="kw">AS</span> entregues,
+    <span class="fn">SUM</span>(<span class="kw">CASE WHEN</span> status=<span class="str">'Cancelado'</span> <span class="kw">THEN</span> <span class="num">1</span> <span class="kw">ELSE</span> <span class="num">0</span> <span class="kw">END</span>) <span class="kw">AS</span> cancelados
+<span class="kw">FROM</span> pedidos
+<span class="kw">GROUP BY</span> <span class="fn">YEAR</span>(dt_pedido), <span class="fn">MONTH</span>(dt_pedido),
+         <span class="fn">DATE_FORMAT</span>(dt_pedido,<span class="str">'%m/%Y'</span>)
+<span class="kw">ORDER BY</span> <span class="fn">YEAR</span>(dt_pedido), <span class="fn">MONTH</span>(dt_pedido);</pre>
+    </div>
+  </div>
+
+  <div class="content-block">
+    <h2><span>📊</span> Script 5 — Agregação com JOIN e HAVING</h2>
+    <div class="code-wrap">
+      <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><span>05_agregacao.sql</span><button class="copy-btn" onclick="copyCode(this)">Copiar</button></div>
+      <pre><span class="cm">-- Receita por categoria — apenas acima de R$ 5.000</span>
+<span class="kw">SELECT</span>
+    c.nome                                      <span class="kw">AS</span> categoria,
+    <span class="fn">COUNT</span>(<span class="kw">DISTINCT</span> p.id_pedido)               <span class="kw">AS</span> total_pedidos,
+    <span class="fn">SUM</span>(ip.quantidade * ip.preco_unit)         <span class="kw">AS</span> receita_bruta,
+    <span class="fn">ROUND</span>(<span class="fn">AVG</span>(ip.preco_unit), <span class="num">2</span>)              <span class="kw">AS</span> ticket_medio
+<span class="kw">FROM</span> itens_pedido ip
+<span class="kw">JOIN</span> pedidos    p  <span class="kw">ON</span> p.id_pedido    = ip.id_pedido
+<span class="kw">JOIN</span> produtos   pr <span class="kw">ON</span> pr.id_produto  = ip.id_produto
+<span class="kw">JOIN</span> categorias c  <span class="kw">ON</span> c.id_categoria = pr.id_categoria
+<span class="kw">WHERE</span> p.status <> <span class="str">'Cancelado'</span>
+<span class="kw">GROUP BY</span> c.id_categoria, c.nome
+<span class="kw">HAVING</span> receita_bruta > <span class="num">5000</span>
+<span class="kw">ORDER BY</span> receita_bruta <span class="kw">DESC</span>;</pre>
+    </div>
+  </div>
+
+  <div class="content-block">
+    <h2><span>🪟</span> Script 6 — Window Functions (MySQL 8+)</h2>
+    <div class="code-wrap">
+      <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><span>06_window_functions.sql</span><button class="copy-btn" onclick="copyCode(this)">Copiar</button></div>
+      <pre><span class="cm">-- Ranking de produtos por receita</span>
+<span class="kw">SELECT</span>
+    pr.nome                                      <span class="kw">AS</span> produto,
+    <span class="fn">SUM</span>(ip.quantidade * ip.preco_unit)           <span class="kw">AS</span> receita,
+    <span class="fn">ROW_NUMBER</span>() <span class="kw">OVER</span> (
+        <span class="kw">ORDER BY</span> <span class="fn">SUM</span>(ip.quantidade * ip.preco_unit) <span class="kw">DESC</span>
+    ) <span class="kw">AS</span> posicao,
+    <span class="fn">DENSE_RANK</span>() <span class="kw">OVER</span> (
+        <span class="kw">ORDER BY</span> <span class="fn">SUM</span>(ip.quantidade * ip.preco_unit) <span class="kw">DESC</span>
+    ) <span class="kw">AS</span> ranking
+<span class="kw">FROM</span> itens_pedido ip
+<span class="kw">JOIN</span> produtos pr <span class="kw">ON</span> pr.id_produto = ip.id_produto
+<span class="kw">GROUP BY</span> pr.id_produto, pr.nome
+<span class="kw">ORDER BY</span> receita <span class="kw">DESC</span>;
+
+<span class="cm">-- LAG: variação mensal de receita</span>
+<span class="kw">SELECT</span>
+    mes_ano,
+    receita,
+    <span class="fn">LAG</span>(receita, <span class="num">1</span>, <span class="num">0</span>) <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> ano, mes)  <span class="kw">AS</span> mes_anterior,
+    <span class="fn">ROUND</span>(
+        (receita - <span class="fn">LAG</span>(receita,<span class="num">1</span>,<span class="num">0</span>) <span class="kw">OVER</span>(<span class="kw">ORDER BY</span> ano,mes))
+        / <span class="fn">NULLIF</span>(<span class="fn">LAG</span>(receita,<span class="num">1</span>,<span class="num">0</span>) <span class="kw">OVER</span>(<span class="kw">ORDER BY</span> ano,mes),<span class="num">0</span>)*<span class="num">100</span>, <span class="num">1</span>
+    ) <span class="kw">AS</span> variacao_pct
+<span class="kw">FROM</span> (
+    <span class="kw">SELECT</span>
+        <span class="fn">YEAR</span>(p.dt_pedido)                  <span class="kw">AS</span> ano,
+        <span class="fn">MONTH</span>(p.dt_pedido)                 <span class="kw">AS</span> mes,
+        <span class="fn">DATE_FORMAT</span>(p.dt_pedido,<span class="str">'%m/%Y'</span>) <span class="kw">AS</span> mes_ano,
+        <span class="fn">SUM</span>(ip.quantidade*ip.preco_unit)   <span class="kw">AS</span> receita
+    <span class="kw">FROM</span> pedidos p
+    <span class="kw">JOIN</span> itens_pedido ip <span class="kw">ON</span> ip.id_pedido = p.id_pedido
+    <span class="kw">WHERE</span> p.status <> <span class="str">'Cancelado'</span>
+    <span class="kw">GROUP BY</span> ano, mes, mes_ano
+) <span class="kw">AS</span> resumo
+<span class="kw">ORDER BY</span> ano, mes;</pre>
+    </div>
+    <div class="callout warn"><span class="ci">⚠️</span><span>Verifique a versão antes de executar: <code>SELECT VERSION();</code> — Window Functions exigem MySQL 8.0+.</span></div>
+  </div>
+
+  <div class="nav-btns">
+    <button class="nav-btn" onclick="goTo('s3')">← Teoria</button>
+    <button class="nav-btn primary" onclick="goTo('s5')">Próximo: Exercícios →</button>
+  </div>
+</div>
+
+<!-- S5 EXERCÍCIOS -->
+<div class="section" id="s5">
+  <div class="section-hero">
+    <div class="tag">Exercícios de Fixação</div>
+    <h1>Hora de praticar</h1>
+    <p>Clique em cada card para ver o enunciado completo. Resolva no MySQL Workbench antes de pedir a resposta.</p>
+  </div>
+
+  <div class="content-block">
+    <h2><span>🟢</span> Básicos (1–5)</h2>
+    <div class="ex-grid">
+      <div class="ex-card" onclick="toggleEx(this)">
+        <div class="ex-header"><span class="ex-badge basic">Básico</span><span class="ex-title">Ex. 01 — Nome completo formatado</span><span class="ex-toggle">▼</span></div>
+        <div class="ex-body">Liste todos os clientes exibindo o nome completo (usando <code>CONCAT_WS</code>), cidade e estado formatados como <strong>"Ana Silva — Garça/SP"</strong>. Use concatenação e <code>UPPER</code> no estado.</div>
+      </div>
+      <div class="ex-card" onclick="toggleEx(this)">
+        <div class="ex-header"><span class="ex-badge basic">Básico</span><span class="ex-title">Ex. 02 — Preço em formato brasileiro</span><span class="ex-toggle">▼</span></div>
+        <div class="ex-body">Mostre o nome de todos os produtos com o preço formatado em reais: <strong>R$ 8.999,90</strong>. Use <code>FORMAT</code>, <code>CONCAT</code> e <code>REPLACE</code> para adaptar o separador ao padrão PT-BR.</div>
+      </div>
+      <div class="ex-card" onclick="toggleEx(this)">
+        <div class="ex-header"><span class="ex-badge basic">Básico</span><span class="ex-title">Ex. 03 — Idade dos clientes</span><span class="ex-toggle">▼</span></div>
+        <div class="ex-body">Calcule a idade de cada cliente em anos usando <code>TIMESTAMPDIFF</code>. Exiba somente clientes com mais de 30 anos, do mais velho para o mais novo.</div>
+      </div>
+      <div class="ex-card" onclick="toggleEx(this)">
+        <div class="ex-header"><span class="ex-badge basic">Básico</span><span class="ex-title">Ex. 04 — Classificação de estoque</span><span class="ex-toggle">▼</span></div>
+        <div class="ex-body">Exiba todos os produtos com situação de estoque: <strong>'Crítico'</strong> (0), <strong>'Baixo'</strong> (1–20), <strong>'Normal'</strong> (21–100) e <strong>'Alto'</strong> (acima de 100). Use <code>CASE WHEN</code>.</div>
+      </div>
+      <div class="ex-card" onclick="toggleEx(this)">
+        <div class="ex-header"><span class="ex-badge basic">Básico</span><span class="ex-title">Ex. 05 — COUNT(*) vs COUNT(coluna)</span><span class="ex-toggle">▼</span></div>
+        <div class="ex-body">Conte o total de clientes com e-mail cadastrado e o total sem e-mail (NULL). Use <code>COUNT(email)</code> e <code>COUNT(*)</code> na mesma query para ver a diferença na prática.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content-block">
+    <h2><span>🔵</span> Intermediários (6–10)</h2>
+    <div class="ex-grid">
+      <div class="ex-card" onclick="toggleEx(this)">
+        <div class="ex-header"><span class="ex-badge inter">Intermediário</span><span class="ex-title">Ex. 06 — Relatório de pedidos com urgência</span><span class="ex-toggle">▼</span></div>
+        <div class="ex-body">Crie um relatório com: código do pedido com 6 dígitos (<code>LPAD</code>), data em <code>dd/mm/aaaa hh:mm</code>, dias desde o pedido (<code>DATEDIFF</code>) e coluna <code>urgencia</code>: <strong>'ATRASADO'</strong> se mais de 60 dias, <strong>'NORMAL'</strong> caso contrário. Use <code>IF</code>.</div>
+      </div>
+      <div class="ex-card" onclick="toggleEx(this)">
+        <div class="ex-header"><span class="ex-badge inter">Intermediário</span><span class="ex-title">Ex. 07 — Desempenho por produto</span><span class="ex-toggle">▼</span></div>
+        <div class="ex-body">Gere relatório com: nome do produto, quantidade total vendida, receita total, preço médio de venda e diferença entre o preço médio de venda e o preço de tabela. Filtre produtos com mais de 1 unidade vendida usando <code>HAVING</code>.</div>
+      </div>
+      <div class="ex-card" onclick="toggleEx(this)">
+        <div class="ex-header"><span class="ex-badge inter">Intermediário</span><span class="ex-title">Ex. 08 — Receita mensal por categoria</span><span class="ex-toggle">▼</span></div>
+        <div class="ex-body">Liste a receita mensal por categoria (mês/ano + categoria + receita), exibindo apenas meses em que a categoria gerou mais de R$ 1.000,00. Exclua pedidos cancelados. Use <code>DATE_FORMAT</code>, <code>GROUP BY</code> e <code>HAVING</code>.</div>
+      </div>
+      <div class="ex-card" onclick="toggleEx(this)">
+        <div class="ex-header"><span class="ex-badge inter">Intermediário</span><span class="ex-title">Ex. 09 — Histórico de compras</span><span class="ex-toggle">▼</span></div>
+        <div class="ex-body">Exiba nome completo de cada cliente, data do primeiro pedido (<code>MIN</code>), data do último (<code>MAX</code>) e número de dias entre eles (<code>DATEDIFF</code>). Apenas clientes com ao menos 1 pedido <strong>'Entregue'</strong>.</div>
+      </div>
+      <div class="ex-card" onclick="toggleEx(this)">
+        <div class="ex-header"><span class="ex-badge inter">Intermediário</span><span class="ex-title">Ex. 10 — Lista de produtos por cliente</span><span class="ex-toggle">▼</span></div>
+        <div class="ex-body">Usando <code>GROUP_CONCAT</code>, gere uma linha por cliente com todos os produtos comprados separados por <strong>" → "</strong>, ordenados alfabeticamente. Exclua pedidos cancelados.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content-block">
+    <h2><span>🟣</span> Desafiadores (11–12)</h2>
+    <div class="ex-grid">
+      <div class="ex-card" onclick="toggleEx(this)">
+        <div class="ex-header"><span class="ex-badge hard">Desafio</span><span class="ex-title">Ex. 11 — Dashboard executivo em uma query</span><span class="ex-toggle">▼</span></div>
+        <div class="ex-body">Uma única query que retorne, para cada mês: mês/ano, total de pedidos, total entregues, receita bruta, receita média por pedido entregue e classificação do mês: <strong>'Ótimo'</strong> (receita &gt; R$ 10.000), <strong>'Bom'</strong> (&gt; R$ 5.000), <strong>'Regular'</strong> (&gt; R$ 1.000) ou <strong>'Fraco'</strong>. Ordene cronologicamente.</div>
+      </div>
+      <div class="ex-card" onclick="toggleEx(this)">
+        <div class="ex-header"><span class="ex-badge hard">Desafio</span><span class="ex-title">Ex. 12 — Ranking com variação mensal (Window)</span><span class="ex-toggle">▼</span></div>
+        <div class="ex-body">Usando Window Functions: nome do produto, receita do mês atual, receita do mês anterior (<code>LAG</code>), variação percentual, posição no ranking (<code>DENSE_RANK</code>) e coluna com <strong>'CRESCIMENTO'</strong> ou <strong>'QUEDA'</strong>. Apenas produtos vendidos em pelo menos 2 meses diferentes.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav-btns">
+    <button class="nav-btn" onclick="goTo('s4')">← Laboratório</button>
+    <button class="nav-btn primary" onclick="goTo('s6')">Próximo: Desafio Extra →</button>
+  </div>
+</div>
+
+<!-- S6 DESAFIO EXTRA -->
+<div class="section" id="s6">
+  <div class="section-hero">
+    <div class="tag">Desafio Extra — Nível Projeto</div>
+    <h1>TechVenda Analytics</h1>
+    <p>A diretoria solicitou relatórios para a reunião trimestral. Você deve entregar um script SQL completo e funcional.</p>
+  </div>
+
+  <div class="challenge-box">
+    <h2>📋 Entregável: <code>relatorio_trimestral.sql</code></h2>
+    <p>Script salvo no Notepad++ e executado no MySQL Workbench sem erros. Os 4 relatórios devem ser separados por comentários de seção.</p>
+    <div class="sub-challenge">
+      <h4>Relatório 1 — Scorecard Geral</h4>
+      <p>Total de pedidos, total entregues, total cancelados, receita bruta, receita líquida, ticket médio, cliente com maior gasto e produto mais vendido em uma única query.</p>
+    </div>
+    <div class="sub-challenge">
+      <h4>Relatório 2 — Top 3 por Categoria</h4>
+      <p>Para cada categoria, os 3 produtos de maior receita usando <code>DENSE_RANK() OVER (PARTITION BY ...)</code>. Exibir categoria, produto, receita e posição interna.</p>
+    </div>
+    <div class="sub-challenge">
+      <h4>Relatório 3 — Segmentação de Clientes</h4>
+      <p>Classificar clientes em <strong>'Novo'</strong> (1 pedido), <strong>'Recorrente'</strong> (2–3) e <strong>'VIP'</strong> (4+). Exibir nome, idade, cidade, segmento, total de pedidos e total gasto.</p>
+    </div>
+    <div class="sub-challenge">
+      <h4>Relatório 4 — Evolução Mensal</h4>
+      <p>Mês a mês: receita, acumulado no ano (<code>SUM() OVER</code>), variação vs mês anterior (<code>LAG</code>) e média móvel dos últimos 2 meses (<code>AVG() OVER (ROWS BETWEEN 1 PRECEDING AND CURRENT ROW)</code>).</p>
+    </div>
+  </div>
+
+  <div class="callout tip"><span class="ci">✅</span><span>Critério de aceite: script executa do zero sem erros manuais. Os 4 relatórios retornam dados reais e coerentes com o banco da TechVenda.</span></div>
+
+  <div class="nav-btns">
+    <button class="nav-btn" onclick="goTo('s5')">← Exercícios</button>
+    <button class="nav-btn primary" onclick="goTo('s7')">Próximo: Checklist →</button>
+  </div>
+</div>
+
+<!-- S7 CHECKLIST -->
+<div class="section" id="s7">
+  <div class="section-hero">
+    <div class="tag">Checklist de Aprendizado</div>
+    <h1>Você realmente aprendeu?</h1>
+    <p>Clique em cada item quando conseguir fazer de forma <strong>independente</strong>, sem consultar exemplos.</p>
+  </div>
+  <div class="content-block">
+    <ul class="checklist" id="checklist">
+      <li onclick="toggleCheck(this)"><div class="chk-box"></div>Sei usar <code>UPPER</code>, <code>LOWER</code>, <code>CONCAT_WS</code> e <code>SUBSTRING</code> em queries reais.</li>
+      <li onclick="toggleCheck(this)"><div class="chk-box"></div>Consigo formatar datas com <code>DATE_FORMAT</code> e calcular diferenças com <code>DATEDIFF</code> e <code>TIMESTAMPDIFF</code>.</li>
+      <li onclick="toggleCheck(this)"><div class="chk-box"></div>Aplico <code>ROUND</code>, <code>CEIL</code>, <code>FLOOR</code>, <code>TRUNCATE</code> corretamente e sei a diferença entre eles.</li>
+      <li onclick="toggleCheck(this)"><div class="chk-box"></div>Uso <code>IF</code>, <code>IFNULL</code>, <code>COALESCE</code> e <code>CASE WHEN</code> para tratar condições e NULLs.</li>
+      <li onclick="toggleCheck(this)"><div class="chk-box"></div>Sei a diferença entre <code>COUNT(*)</code> e <code>COUNT(coluna)</code> e quando usar cada um.</li>
+      <li onclick="toggleCheck(this)"><div class="chk-box"></div>Entendo por que <code>WHERE</code> não filtra agregações — uso <code>HAVING</code> para isso.</li>
+      <li onclick="toggleCheck(this)"><div class="chk-box"></div>Combino <code>SUM</code>, <code>AVG</code>, <code>MAX</code>, <code>MIN</code> com <code>GROUP BY</code> em queries com <code>JOIN</code>.</li>
+      <li onclick="toggleCheck(this)"><div class="chk-box"></div>Entendo o conceito de Window Function e sua diferença em relação à agregação.</li>
+      <li onclick="toggleCheck(this)"><div class="chk-box"></div>Uso <code>ROW_NUMBER()</code>, <code>RANK()</code> e <code>DENSE_RANK()</code> com <code>OVER (ORDER BY ...)</code>.</li>
+      <li onclick="toggleCheck(this)"><div class="chk-box"></div>Sei usar <code>LAG</code> e <code>LEAD</code> para comparar linhas consecutivas.</li>
+      <li onclick="toggleCheck(this)"><div class="chk-box"></div>Sei usar <code>PARTITION BY</code> para rankings por grupos distintos.</li>
+      <li onclick="toggleCheck(this)"><div class="chk-box"></div>Sei por que função em coluna indexada no <code>WHERE</code> prejudica a performance.</li>
+    </ul>
+    <div style="margin-top:20px;padding:14px 18px;background:var(--code-bg);border-radius:8px;font-size:13px;color:var(--muted);display:flex;align-items:center;gap:10px;">
+      <span style="font-size:20px;">🏆</span>
+      <span>Progresso: <span id="check-count" style="color:var(--accent3);font-weight:700;">0</span> de 12 itens concluídos.</span>
+    </div>
+  </div>
+  <div class="nav-btns">
+    <button class="nav-btn" onclick="goTo('s6')">← Desafio Extra</button>
+    <button class="nav-btn primary" onclick="goTo('s8')">Próximo: Bibliografia →</button>
+  </div>
+</div>
+
+<!-- S8 BIBLIOGRAFIA -->
+<div class="section" id="s8">
+  <div class="section-hero">
+    <div class="tag">Bibliografia e Referências</div>
+    <h1>Fundamentos teóricos desta aula</h1>
+    <p>Autores clássicos que embasam o conteúdo. Use como referência em trabalhos e provas.</p>
+  </div>
+  <div class="content-block">
+    <div class="biblio-card">
+      <div class="biblio-icon">📘</div>
+      <div><div class="biblio-author">C.J. Date</div><div class="biblio-book">Introdução a Sistemas de Banco de Dados · SQL and Relational Theory</div><div class="biblio-desc">Fundamenta o conceito formal de função como mapeamento escalar e a lógica de três valores para tratamento de NULL em SQL.</div></div>
+    </div>
+    <div class="biblio-card">
+      <div class="biblio-icon">📗</div>
+      <div><div class="biblio-author">Elmasri & Navathe</div><div class="biblio-book">Fundamentals of Database Systems (7ª ed.) — Cap. 5</div><div class="biblio-desc">Funções de agregação e álgebra relacional. A 7ª edição inclui seção dedicada a Window Functions e análise OLAP.</div></div>
+    </div>
+    <div class="biblio-card">
+      <div class="biblio-icon">📙</div>
+      <div><div class="biblio-author">Korth, Silberschatz & Sudarshan</div><div class="biblio-book">Database System Concepts — Cap. 3 e Cap. 12</div><div class="biblio-desc">Semântica de GROUP BY e HAVING (Cap. 3). Otimização de consultas e impacto de funções em índices (Cap. 12).</div></div>
+    </div>
+    <div class="biblio-card">
+      <div class="biblio-icon">📕</div>
+      <div><div class="biblio-author">Carlos Alberto Heuser</div><div class="biblio-book">Projeto de Banco de Dados — Cap. 9</div><div class="biblio-desc">SQL avançado com foco em portabilidade de funções escalares entre diferentes SGBDs.</div></div>
+    </div>
+    <div class="biblio-card">
+      <div class="biblio-icon">🌐</div>
+      <div><div class="biblio-author">MySQL Documentation (Oracle)</div><div class="biblio-book">MySQL 8.0 Reference Manual — Functions and Operators · Window Functions</div><div class="biblio-desc">Referência oficial e definitiva. Consulte sempre para comportamento exato de cada função no MySQL 8.0.</div></div>
+    </div>
+    <div class="callout tip" style="margin-top:16px;"><span class="ci">📌</span><span>Links: <strong>Funções:</strong> dev.mysql.com/doc/refman/8.0/en/functions.html · <strong>Window:</strong> dev.mysql.com/doc/refman/8.0/en/window-functions.html</span></div>
+  </div>
+
+  <div style="background:linear-gradient(135deg,rgba(79,142,247,.12),rgba(167,139,250,.08));border:1px solid rgba(167,139,250,.25);border-radius:12px;padding:28px;margin-bottom:22px;text-align:center;">
+    <div style="font-size:40px;margin-bottom:10px;">🎉</div>
+    <div style="font-size:18px;font-weight:700;margin-bottom:6px;">Aula 05 concluída!</div>
+    <div style="font-size:13px;color:var(--muted);">Profº Ferdinando Paes · Fatec Garça · Laboratório de Banco de Dados</div>
+  </div>
+
+  <div class="nav-btns">
+    <button class="nav-btn" onclick="goTo('s7')">← Checklist</button>
+    <button class="nav-btn primary" onclick="goTo('s1')">↩ Voltar ao Início</button>
+  </div>
+</div>
+
+</main>
+</div>
+
+<script>
+const sections = ['s1','s2','s3','s4','s5','s6','s7','s8'];
+const visited  = new Set(['s1']);
+
+function goTo(id) {
+  sections.forEach(s => {
+    document.getElementById(s).classList.remove('active');
+    document.querySelector('[data-target="'+s+'"]').classList.remove('active');
+  });
+  document.getElementById(id).classList.add('active');
+  document.querySelector('[data-target="'+id+'"]').classList.add('active');
+  visited.add(id);
+  sections.forEach(s => {
+    if (visited.has(s)) document.getElementById('done-'+s).textContent = '✓';
+  });
+  updateProgress();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function updateProgress() {
+  const idx = sections.indexOf(document.querySelector('.section.active').id);
+  const pct = Math.round((idx+1)/sections.length*100);
+  document.getElementById('prog-fill').style.width = pct+'%';
+  document.getElementById('progress-label').textContent = (idx+1)+'/'+sections.length;
+}
+
+function toggleEx(card) {
+  card.classList.toggle('open');
+  card.querySelector('.ex-toggle').textContent = card.classList.contains('open') ? '▲' : '▼';
+}
+
+function toggleCheck(li) {
+  li.classList.toggle('checked');
+  li.querySelector('.chk-box').textContent = li.classList.contains('checked') ? '✓' : '';
+  const total = document.querySelectorAll('#checklist li.checked').length;
+  document.getElementById('check-count').textContent = total;
+}
+
+function copyCode(btn) {
+  const pre = btn.closest('.code-wrap').querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(() => {
+    btn.textContent = 'Copiado!';
+    btn.style.borderColor = 'var(--accent3)';
+    btn.style.color = 'var(--accent3)';
+    setTimeout(() => { btn.textContent='Copiar'; btn.style.borderColor=''; btn.style.color=''; }, 1800);
+  });
+}
+
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', () => goTo(item.dataset.target));
+});
+
+updateProgress();
+</script>
+</body>
+</html>
