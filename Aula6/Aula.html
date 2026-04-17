@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab BD: Aula 06 - INNER JOIN</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        @media (max-width: 640px) {
+            .chart-container {
+                height: 250px;
+            }
+        }
+        .code-block {
+            font-family: monospace;
+            background-color: #1e293b;
+            color: #f8fafc;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            white-space: pre;
+        }
+        .tab-btn.active {
+            border-bottom: 4px solid #059669;
+            color: #059669;
+            font-weight: bold;
+        }
+        .anim-fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+    <!-- Chosen Palette: Warm Stone Neutrals with Emerald Accents -->
+    <!-- Application Structure Plan: The SPA is structured as a tabbed learning dashboard. It departs from a linear document to allow students to switch between 'Theory', 'Practice (Lab)', 'Exercises', and 'Review' at their own pace. This supports active learning where a student can read theory, try the lab, and jump back if needed. The interactive simulator makes the abstract concept of a database join concrete. -->
+    <!-- Visualization & Content Choices: 
+         1. Theory -> Goal: Inform -> Interactive HTML Tables -> Shows exactly how rows match or are discarded in a JOIN. Library: Vanilla JS. NO SVG used.
+         2. Lab -> Goal: Organize & Inform -> Side-by-side code blocks with copy buttons -> Easy transfer to MySQL Workbench.
+         3. Lab (Data Vis) -> Goal: Inform -> Bar Chart -> Shows the distribution of products in the sample database to visualize what the queries are querying. Library: Chart.js within strict container.
+         4. Review -> Goal: Track Progress -> Interactive Checklist -> Provides immediate feedback on learning objectives. 
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="bg-stone-50 text-stone-800 font-sans leading-relaxed min-h-screen flex flex-col">
+
+    <header class="bg-white shadow-sm border-b border-stone-200 sticky top-0 z-10">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold text-stone-900">📌 Aula 06: INNER JOIN</h1>
+                <p class="text-sm text-stone-500">Lab. de Banco de Dados | Prof. Ferdinando Paes | Fatec Garça</p>
+            </div>
+            <div class="mt-4 md:mt-0 flex space-x-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0">
+                <button onclick="switchTab('teoria')" id="btn-teoria" class="tab-btn active px-4 py-2 text-stone-600 hover:text-emerald-700 whitespace-nowrap transition-colors">📚 Teoria</button>
+                <button onclick="switchTab('laboratorio')" id="btn-laboratorio" class="tab-btn px-4 py-2 text-stone-600 hover:text-emerald-700 whitespace-nowrap transition-colors">🛠️ Laboratório</button>
+                <button onclick="switchTab('exercicios')" id="btn-exercicios" class="tab-btn px-4 py-2 text-stone-600 hover:text-emerald-700 whitespace-nowrap transition-colors">🧠 Exercícios</button>
+                <button onclick="switchTab('revisao')" id="btn-revisao" class="tab-btn px-4 py-2 text-stone-600 hover:text-emerald-700 whitespace-nowrap transition-colors">✅ Revisão</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-6xl mx-auto px-4 py-8 w-full">
+
+        <section id="teoria" class="anim-fade-in block">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-stone-900 mb-2">Fundamentação Teórica</h2>
+                <p class="text-lg text-stone-600">Nesta seção, exploramos a lógica relacional por trás da junção de tabelas. Compreender o "porquê" é essencial antes de escrever o código.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+                    <h3 class="text-xl font-bold mb-4 text-emerald-800">O que é o INNER JOIN?</h3>
+                    <p class="mb-4">Em um banco de dados relacional, os dados são normalizados para evitar redundância. O <code class="bg-stone-100 px-1 rounded text-emerald-700">INNER JOIN</code> é o mecanismo que nos permite "recolar" esses dados no momento da consulta, baseando-se em uma coluna comum (geralmente PK e FK).</p>
+                    <p class="text-sm text-stone-500 italic">Segundo Elmasri & Navathe, retorna apenas as linhas onde há uma correspondência em ambas as tabelas.</p>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="bg-rose-50 border-l-4 border-rose-500 p-4 rounded-r-xl">
+                        <h4 class="font-bold text-rose-800 mb-2">❌ Erros Comuns</h4>
+                        <ul class="list-disc list-inside text-rose-900 text-sm space-y-1">
+                            <li><strong>Esquecer o ON:</strong> Gera Produto Cartesiano e trava o servidor.</li>
+                            <li><strong>Ambiguidade:</strong> Usar colunas com mesmo nome sem especificar a tabela.</li>
+                            <li><strong>Confusão com WHERE:</strong> Fazer a junção no WHERE é padrão obsoleto (SQL-89).</li>
+                        </ul>
+                    </div>
+                    <div class="bg-emerald-50 border-l-4 border-emerald-500 p-4 rounded-r-xl">
+                        <h4 class="font-bold text-emerald-800 mb-2">✅ Boas Práticas</h4>
+                        <ul class="list-disc list-inside text-emerald-900 text-sm space-y-1">
+                            <li><strong>Sempre use Aliases:</strong> Ex: <code class="bg-emerald-100 px-1 rounded">FROM Funcionarios AS f</code>.</li>
+                            <li><strong>Selecione apenas o necessário:</strong> Evite <code class="bg-emerald-100 px-1 rounded">SELECT *</code> para não trazer chaves repetidas.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+                <h3 class="text-xl font-bold mb-4">Simulador Interativo: A Lógica da Junção</h3>
+                <p class="mb-6 text-stone-600">Observe as tabelas abaixo. Clique no botão para simular um INNER JOIN entre Funcionários e Departamentos usando a coluna ID Depto.</p>
+                
+                <div class="flex flex-col md:flex-row gap-4 mb-6">
+                    <div class="flex-1">
+                        <h4 class="font-bold mb-2 text-center bg-stone-100 py-1 rounded">Tabela A: Funcionarios</h4>
+                        <table class="w-full text-sm text-left text-stone-500 border border-stone-200">
+                            <thead class="bg-stone-50 text-stone-700">
+                                <tr><th class="px-3 py-2 border-b">Nome</th><th class="px-3 py-2 border-b">ID_Depto (FK)</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-b" id="row-f1"><td class="px-3 py-2">João</td><td class="px-3 py-2 font-bold text-emerald-600">1</td></tr>
+                                <tr class="border-b" id="row-f2"><td class="px-3 py-2">Maria</td><td class="px-3 py-2 font-bold text-rose-500">3 (Inexistente)</td></tr>
+                                <tr><td class="px-3 py-2">Pedro</td><td class="px-3 py-2 font-bold text-emerald-600">1</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="font-bold mb-2 text-center bg-stone-100 py-1 rounded">Tabela B: Departamentos</h4>
+                        <table class="w-full text-sm text-left text-stone-500 border border-stone-200">
+                            <thead class="bg-stone-50 text-stone-700">
+                                <tr><th class="px-3 py-2 border-b">ID_Depto (PK)</th><th class="px-3 py-2 border-b">Nome_Depto</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-b" id="row-d1"><td class="px-3 py-2 font-bold text-emerald-600">1</td><td class="px-3 py-2">TI</td></tr>
+                                <tr><td class="px-3 py-2">2</td><td class="px-3 py-2">RH (Sem func.)</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="text-center mb-6">
+                    <button onclick="runSimulator()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-6 rounded-full shadow-md transition-transform transform hover:scale-105">
+                        ⚙️ Executar INNER JOIN
+                    </button>
+                </div>
+
+                <div id="sim-result" class="hidden anim-fade-in border-t border-stone-200 pt-6">
+                    <h4 class="font-bold mb-2 text-center bg-emerald-100 text-emerald-800 py-1 rounded">Resultado Final</h4>
+                    <p class="text-sm text-center mb-4 text-stone-600">Apenas os registros com correspondência nas duas tabelas sobrevivem à junção.</p>
+                    <table class="w-full text-sm text-left text-stone-500 border border-stone-200 mx-auto max-w-lg">
+                        <thead class="bg-emerald-50 text-emerald-900">
+                            <tr><th class="px-3 py-2 border-b">Nome</th><th class="px-3 py-2 border-b">Nome_Depto</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-b bg-white"><td class="px-3 py-2">João</td><td class="px-3 py-2">TI</td></tr>
+                            <tr class="bg-white"><td class="px-3 py-2">Pedro</td><td class="px-3 py-2">TI</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section id="laboratorio" class="hidden anim-fade-in">
+             <div class="mb-8">
+                <h2 class="text-3xl font-bold text-stone-900 mb-2">Parte Prática – Laboratório</h2>
+                <p class="text-lg text-stone-600">Aplique os conceitos criando um banco de dados real. Use os scripts abaixo no seu MySQL Workbench.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-2 space-y-6">
+                    
+                    <div class="bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden">
+                        <div class="bg-stone-100 px-4 py-3 border-b border-stone-200 flex justify-between items-center">
+                            <h3 class="font-bold text-stone-800">Passo 1: Preparação do Ambiente</h3>
+                            <button onclick="copyCode('code-setup')" class="text-xs bg-white border border-stone-300 px-2 py-1 rounded hover:bg-stone-50">Copiar Código</button>
+                        </div>
+                        <div class="p-0">
+<div class="code-block text-sm" id="code-setup">CREATE DATABASE fatec_lab_join;
+USE fatec_lab_join;
+
+CREATE TABLE categorias (
+    id_categoria INT PRIMARY KEY AUTO_INCREMENT,
+    nome_categoria VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE produtos (
+    id_produto INT PRIMARY KEY AUTO_INCREMENT,
+    nome_produto VARCHAR(100) NOT NULL,
+    preco DECIMAL(10,2),
+    fk_categoria INT,
+    CONSTRAINT fk_prod_cat FOREIGN KEY (fk_categoria) REFERENCES categorias(id_categoria)
+);
+
+-- Inserção de Dados
+INSERT INTO categorias (nome_categoria) VALUES ('Eletrônicos'), ('Móveis'), ('Limpeza');
+INSERT INTO produtos (nome_produto, preco, fk_categoria) VALUES 
+('Smartphone', 1500.00, 1), 
+('Notebook', 3500.00, 1),
+('Sofá 3 lugares', 1200.00, 2);
+</div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden">
+                        <div class="bg-stone-100 px-4 py-3 border-b border-stone-200 flex justify-between items-center">
+                            <h3 class="font-bold text-stone-800">Passo 2: INNER JOIN Simples (2 Tabelas)</h3>
+                            <button onclick="copyCode('code-join1')" class="text-xs bg-white border border-stone-300 px-2 py-1 rounded hover:bg-stone-50">Copiar Código</button>
+                        </div>
+                        <div class="p-4 bg-white border-b border-stone-100">
+                            <p class="text-sm text-stone-600"><strong>Objetivo:</strong> Listar produtos e os nomes de suas categorias.</p>
+                        </div>
+<div class="code-block text-sm rounded-none rounded-b-xl" id="code-join1">SELECT 
+    p.nome_produto, 
+    p.preco, 
+    c.nome_categoria
+FROM produtos AS p
+INNER JOIN categorias AS c 
+    ON p.fk_categoria = c.id_categoria;</div>
+                    </div>
+
+                </div>
+
+                <div class="lg:col-span-1">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200 sticky top-24">
+                        <h3 class="font-bold text-stone-800 mb-4">Visão dos Dados (Produtos por Categoria)</h3>
+                        <p class="text-xs text-stone-500 mb-4">Este gráfico representa o resultado esperado caso executemos um GROUP BY com INNER JOIN nos dados recém inseridos.</p>
+                        
+                        <div class="chart-container">
+                            <canvas id="dataChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="exercicios" class="hidden anim-fade-in">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-stone-900 mb-2">Exercícios de Fixação</h2>
+                <p class="text-lg text-stone-600">Teste seus conhecimentos. Tente resolver no Workbench antes de ver as dicas.</p>
+            </div>
+
+            <div class="space-y-6">
+                
+                <div class="bg-white rounded-xl shadow-sm border border-emerald-200 overflow-hidden">
+                    <div class="bg-emerald-50 px-6 py-4 border-b border-emerald-100">
+                        <h3 class="font-bold text-emerald-800 text-lg">🟢 Nível Básico (Aquecimento)</h3>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <div class="border-b border-stone-100 pb-4">
+                            <p class="font-medium">1. Selecione todos os nomes de produtos e os nomes de suas respectivas categorias, ordenando pelo nome do produto.</p>
+                        </div>
+                        <div class="border-b border-stone-100 pb-4">
+                            <p class="font-medium">2. Mostre o ID do pedido e o e-mail do cliente que realizou cada pedido.</p>
+                        </div>
+                        <div class="pb-2">
+                            <p class="font-medium">3. Conte quantos produtos existem em cada categoria.</p>
+                            <button onclick="toggleHint('hint-1')" class="mt-2 text-xs text-emerald-600 hover:underline">Mostrar Dica</button>
+                            <div id="hint-1" class="hidden mt-2 p-3 bg-stone-100 rounded text-sm font-mono text-stone-700">Dica: Use funções de agregação (COUNT) junto com GROUP BY e INNER JOIN.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-amber-200 overflow-hidden">
+                    <div class="bg-amber-50 px-6 py-4 border-b border-amber-100">
+                        <h3 class="font-bold text-amber-800 text-lg">🟡 Nível Intermediário (Raciocínio)</h3>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <div class="border-b border-stone-100 pb-4">
+                            <p class="font-medium">1. Crie uma consulta que retorne o nome do cliente, o ID do pedido e a data, mas apenas para clientes com domínio "@fatec.sp.gov.br".</p>
+                        </div>
+                        <div class="pb-2">
+                            <p class="font-medium">2. Se inserirmos uma categoria "Jardinagem" sem produtos, ela aparecerá em um INNER JOIN com a tabela produtos?</p>
+                            <button onclick="toggleHint('hint-2')" class="mt-2 text-xs text-amber-600 hover:underline">Mostrar Resposta</button>
+                            <div id="hint-2" class="hidden mt-2 p-3 bg-stone-100 rounded text-sm text-stone-700"><strong>Não.</strong> O INNER JOIN exige correspondência nas duas tabelas. Como não há produtos com o ID de Jardinagem, a categoria é omitida do resultado. (Para forçar o aparecimento, usaríamos LEFT JOIN).</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-stone-900 rounded-xl shadow-lg border border-stone-700 overflow-hidden text-stone-100">
+                    <div class="bg-stone-800 px-6 py-4 border-b border-stone-700">
+                        <h3 class="font-bold text-white text-lg">🚀 Desafio Extra (Nível Projeto)</h3>
+                    </div>
+                    <div class="p-6">
+                        <p class="mb-4"><strong>Cenário:</strong> A Fatec Garça deseja um sistema para controlar empréstimos de livros.</p>
+                        <ol class="list-decimal list-inside space-y-2 text-stone-300">
+                            <li>Crie tabelas: <code class="text-emerald-400">Autores</code>, <code class="text-emerald-400">Livros</code> e <code class="text-emerald-400">Emprestimos</code>.</li>
+                            <li>Estabeleça os relacionamentos (FKs).</li>
+                            <li>Desenvolva uma consulta que gere um "Relatório de Atrasos", mostrando nome do Aluno, título do livro e nome do autor, filtrando apenas livros não devolvidos.</li>
+                        </ol>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <section id="revisao" class="hidden anim-fade-in">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-stone-900 mb-2">Checklist & Referências</h2>
+                <p class="text-lg text-stone-600">Valide seu aprendizado antes de finalizar a aula.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+                    <h3 class="font-bold text-xl mb-4 text-stone-800">🧾 Checklist de Aprendizado</h3>
+                    
+                    <div class="w-full bg-stone-200 rounded-full h-2.5 mb-6">
+                      <div id="progress-bar" class="bg-emerald-600 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+
+                    <div class="space-y-3">
+                        <label class="flex items-center space-x-3 cursor-pointer group">
+                            <input type="checkbox" class="checklist-item form-checkbox h-5 w-5 text-emerald-600 rounded border-stone-300 focus:ring-emerald-500" onchange="updateProgress()">
+                            <span class="text-stone-700 group-hover:text-stone-900 transition-colors">Entendo por que usamos aliases (AS) em tabelas.</span>
+                        </label>
+                        <label class="flex items-center space-x-3 cursor-pointer group">
+                            <input type="checkbox" class="checklist-item form-checkbox h-5 w-5 text-emerald-600 rounded border-stone-300 focus:ring-emerald-500" onchange="updateProgress()">
+                            <span class="text-stone-700 group-hover:text-stone-900 transition-colors">Consigo explicar a diferença entre INNER JOIN e produto cartesiano.</span>
+                        </label>
+                        <label class="flex items-center space-x-3 cursor-pointer group">
+                            <input type="checkbox" class="checklist-item form-checkbox h-5 w-5 text-emerald-600 rounded border-stone-300 focus:ring-emerald-500" onchange="updateProgress()">
+                            <span class="text-stone-700 group-hover:text-stone-900 transition-colors">Sei realizar a junção de 3 ou mais tabelas em um único SELECT.</span>
+                        </label>
+                        <label class="flex items-center space-x-3 cursor-pointer group">
+                            <input type="checkbox" class="checklist-item form-checkbox h-5 w-5 text-emerald-600 rounded border-stone-300 focus:ring-emerald-500" onchange="updateProgress()">
+                            <span class="text-stone-700 group-hover:text-stone-900 transition-colors">Compreendo que o INNER JOIN descarta registros sem correspondência.</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="bg-stone-800 p-6 rounded-xl shadow-sm border border-stone-700 text-stone-200">
+                    <h3 class="font-bold text-xl mb-4 text-white">📖 Conexão com Bibliografia</h3>
+                    <ul class="space-y-4">
+                        <li class="pl-4 border-l-2 border-stone-500">
+                            <strong class="text-emerald-400">ELMASRI, R. & NAVATHE, S.</strong><br>
+                            <span class="text-sm text-stone-400">Sistemas de Banco de Dados. (Conceito de Álgebra Relacional e Operação Join).</span>
+                        </li>
+                        <li class="pl-4 border-l-2 border-stone-500">
+                            <strong class="text-emerald-400">KORTH, H. & SILBERSCHATZ, A.</strong><br>
+                            <span class="text-sm text-stone-400">Sistema de Banco de Dados. (Otimização de consultas e processamento).</span>
+                        </li>
+                        <li class="pl-4 border-l-2 border-stone-500">
+                            <strong class="text-emerald-400">HEUSER, Carlos Alberto.</strong><br>
+                            <span class="text-sm text-stone-400">Projeto de Banco de Dados. (Normalização).</span>
+                        </li>
+                    </ul>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-white border-t border-stone-200 py-6 mt-auto">
+        <div class="max-w-6xl mx-auto px-4 text-center text-sm text-stone-500">
+            <p>Laboratório de Banco de Dados - Desenvolvido para consolidação prática de comandos SQL.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Tab Navigation Logic
+        function switchTab(tabId) {
+            const tabs = ['teoria', 'laboratorio', 'exercicios', 'revisao'];
+            tabs.forEach(t => {
+                document.getElementById(t).classList.add('hidden');
+                document.getElementById(t).classList.remove('block');
+                document.getElementById('btn-' + t).classList.remove('active');
+            });
+            
+            document.getElementById(tabId).classList.remove('hidden');
+            document.getElementById(tabId).classList.add('block');
+            document.getElementById('btn-' + tabId).classList.add('active');
+
+            if(tabId === 'laboratorio' && !chartInitialized) {
+                initChart();
+                chartInitialized = true;
+            }
+        }
+
+        // Simulator Logic
+        function runSimulator() {
+            const res = document.getElementById('sim-result');
+            const rF1 = document.getElementById('row-f1');
+            const rD1 = document.getElementById('row-d1');
+            const rF2 = document.getElementById('row-f2');
+
+            // Simple visual effect
+            rF1.classList.add('bg-emerald-100');
+            rD1.classList.add('bg-emerald-100');
+            rF2.classList.add('bg-rose-100', 'opacity-50');
+
+            res.classList.remove('hidden');
+            
+            setTimeout(() => {
+                rF1.classList.remove('bg-emerald-100');
+                rD1.classList.remove('bg-emerald-100');
+                rF2.classList.remove('bg-rose-100', 'opacity-50');
+            }, 2000);
+        }
+
+        // Code Copy Logic
+        function copyCode(elementId) {
+            const codeText = document.getElementById(elementId).innerText;
+            navigator.clipboard.writeText(codeText).then(() => {
+                // Show brief visual feedback (could be improved with a toast)
+                const btn = event.target;
+                const originalText = btn.innerText;
+                btn.innerText = "Copiado!";
+                btn.classList.add('bg-emerald-100', 'text-emerald-800');
+                setTimeout(() => {
+                    btn.innerText = originalText;
+                    btn.classList.remove('bg-emerald-100', 'text-emerald-800');
+                }, 2000);
+            });
+        }
+
+        // Exercises Hint Logic
+        function toggleHint(id) {
+            const el = document.getElementById(id);
+            if(el.classList.contains('hidden')) {
+                el.classList.remove('hidden');
+            } else {
+                el.classList.add('hidden');
+            }
+        }
+
+        // Checklist Logic
+        function updateProgress() {
+            const checkboxes = document.querySelectorAll('.checklist-item');
+            let checkedCount = 0;
+            checkboxes.forEach(cb => {
+                if(cb.checked) checkedCount++;
+            });
+            const percentage = (checkedCount / checkboxes.length) * 100;
+            document.getElementById('progress-bar').style.width = percentage + '%';
+        }
+
+        // Chart.js Logic
+        let chartInitialized = false;
+        function initChart() {
+            const ctx = document.getElementById('dataChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Eletrônicos', 'Móveis', 'Limpeza'],
+                    datasets: [{
+                        label: 'Qtd. de Produtos inseridos no Lab',
+                        data: [2, 1, 0],
+                        backgroundColor: [
+                            'rgba(16, 185, 129, 0.7)', // Emerald
+                            'rgba(245, 158, 11, 0.7)', // Amber
+                            'rgba(244, 63, 94, 0.7)'   // Rose
+                        ],
+                        borderColor: [
+                            'rgb(16, 185, 129)',
+                            'rgb(245, 158, 11)',
+                            'rgb(244, 63, 94)'
+                        ],
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `Produtos: ${context.raw}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { stepSize: 1 }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
