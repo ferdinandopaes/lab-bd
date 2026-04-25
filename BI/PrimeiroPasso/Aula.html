@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projeto Fatec Express: Consultoria de Dados</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 300px;
+            }
+        }
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: #f5f5f4; 
+            color: #292524;
+        }
+        .nav-btn.active {
+            background-color: #0d9488;
+            color: #ffffff;
+            font-weight: 600;
+        }
+        .fade-in {
+            animation: fadeIn 0.4s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .highlight-entidade { background-color: #fde68a; color: #92400e; font-weight: bold; padding: 0 4px; border-radius: 4px; }
+        .highlight-atributo { background-color: #bbf7d0; color: #166534; font-weight: bold; padding: 0 4px; border-radius: 4px; }
+        .highlight-processo { background-color: #bfdbfe; color: #1e3a8a; font-weight: bold; padding: 0 4px; border-radius: 4px; }
+        .transition-colors { transition: all 0.3s ease; }
+    </style>
+    <!-- Chosen Palette: Warm Stone Neutrals with Teal (Teal-600 to Teal-800) and Amber/Rose accents for contrasts. -->
+    <!-- Application Structure Plan: The SPA is structured as a "Consultant Briefing Dashboard". It uses a side-navigation (bottom on mobile) to break the 2-hour classes into logical, digestible missions: Context, Problem Analysis (Excel vs DB), Requirements Gathering, Modeling, and the Squad Challenge. This task-oriented view transforms passive reading into an active exploration of the consulting process. -->
+    <!-- Visualization & Content Choices: 
+         1. Context -> Goal: Inform -> Clean text with stylized warning cards for the problems.
+         2. Comparison -> Goal: Compare -> Radar Chart (Chart.js) comparing Excel vs SGBD across 4 metrics. Justification: Visually demonstrates the superiority of a database in a single glance.
+         3. Requirements -> Goal: Engage/Teach -> Interactive Text block where users click to reveal Entities, Attributes, and Processes. Justification: Active learning for requirement extraction.
+         4. Modeling -> Goal: Organize -> CSS Grid layout resembling database tables with PK/FK indications. Justification: Prepares the student for the visual interface of MySQL Workbench without needing SVG/Mermaid diagrams.
+         5. Challenge -> Goal: Action -> Task list with clear deliverables.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="flex flex-col md:flex-row min-h-screen">
+
+    <nav class="w-full md:w-64 bg-stone-900 text-stone-100 flex-shrink-0 shadow-xl z-20 md:min-h-screen md:sticky md:top-0">
+        <div class="p-6 border-b border-stone-800">
+            <h1 class="text-xl font-bold text-teal-400">Fatec Express</h1>
+            <p class="text-xs text-stone-400 mt-1">Ciclo 1: Mundo Transacional</p>
+        </div>
+        <div class="p-4 flex flex-row md:flex-col gap-2 overflow-x-auto md:overflow-visible">
+            <button onclick="navigate('intro')" id="btn-intro" class="nav-btn active flex-shrink-0 md:w-full text-left px-4 py-3 rounded-lg text-sm transition-colors hover:bg-stone-800">1. O Cenário</button>
+            <button onclick="navigate('analise')" id="btn-analise" class="nav-btn flex-shrink-0 md:w-full text-left px-4 py-3 rounded-lg text-sm transition-colors hover:bg-stone-800">2. Planilha vs SGBD</button>
+            <button onclick="navigate('requisitos')" id="btn-requisitos" class="nav-btn flex-shrink-0 md:w-full text-left px-4 py-3 rounded-lg text-sm transition-colors hover:bg-stone-800">3. Requisitos</button>
+            <button onclick="navigate('modelagem')" id="btn-modelagem" class="nav-btn flex-shrink-0 md:w-full text-left px-4 py-3 rounded-lg text-sm transition-colors hover:bg-stone-800">4. Modelagem (DER)</button>
+            <button onclick="navigate('desafio')" id="btn-desafio" class="nav-btn flex-shrink-0 md:w-full text-left px-4 py-3 rounded-lg text-sm transition-colors hover:bg-stone-800">5. Missão do Squad</button>
+        </div>
+    </nav>
+
+    <main class="flex-grow p-6 md:p-10 lg:p-14 overflow-y-auto w-full">
+        <div class="max-w-5xl mx-auto">
+
+            <section id="intro" class="view-section fade-in block">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-extrabold text-stone-800 tracking-tight">O Problema de Negócio</h2>
+                    <p class="mt-2 text-lg text-stone-600">Entenda o contexto da empresa antes de propor soluções tecnológicas. Seu papel é atuar como um Consultor de Dados Júnior.</p>
+                </div>
+
+                <div class="bg-white rounded-2xl p-8 shadow-sm border border-stone-200 mb-8">
+                    <h3 class="text-xl font-bold text-stone-800 mb-4 flex items-center gap-2">
+                        <span>&#128230;</span> A Bagunça da Fatec Express
+                    </h3>
+                    <p class="text-stone-600 leading-relaxed mb-6">
+                        A Fatec Express é uma empresa de logística e vendas que cresceu rápido demais. Sua gestão de dados ficou para trás e, atualmente, toda a operação depende de três arquivos Excel isolados: <code class="bg-stone-100 text-rose-600 px-2 py-1 rounded">clientes.xlsx</code>, <code class="bg-stone-100 text-rose-600 px-2 py-1 rounded">pedidos.xlsx</code> e <code class="bg-stone-100 text-rose-600 px-2 py-1 rounded">entregas.xlsx</code>.
+                    </p>
+                    
+                    <h4 class="font-semibold text-stone-800 mb-4">Consequências Atuais (Dores do Cliente):</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-rose-50 border-l-4 border-rose-500 p-4 rounded-r-lg">
+                            <h5 class="font-bold text-rose-800 text-sm uppercase tracking-wider mb-1">Redundância</h5>
+                            <p class="text-sm text-rose-900">O mesmo cliente é cadastrado várias vezes com nomes levemente diferentes, poluindo a base.</p>
+                        </div>
+                        <div class="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-lg">
+                            <h5 class="font-bold text-amber-800 text-sm uppercase tracking-wider mb-1">Inconsistência</h5>
+                            <p class="text-sm text-amber-900">O estoque diz que tem o produto, mas a planilha de vendas não foi atualizada. Dados não batem.</p>
+                        </div>
+                        <div class="bg-stone-100 border-l-4 border-stone-500 p-4 rounded-r-lg">
+                            <h5 class="font-bold text-stone-800 text-sm uppercase tracking-wider mb-1">Decisões no Chute</h5>
+                            <p class="text-sm text-stone-600">Sem cruzamento de dados, a diretoria não sabe qual região é mais lucrativa ou onde estão os gargalos.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="analise" class="view-section hidden">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-extrabold text-stone-800 tracking-tight">Planilha vs Banco de Dados</h2>
+                    <p class="mt-2 text-lg text-stone-600">Por que o Excel não serve mais? Analise a comparação estrutural entre as duas abordagens para convencer a diretoria.</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center mb-8">
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-stone-200 h-full">
+                        <h3 class="text-xl font-bold text-stone-800 mb-6">Comparativo de Capacidade</h3>
+                        <div class="chart-container">
+                            <canvas id="comparisonChart"></canvas>
+                        </div>
+                        <p class="text-xs text-center text-stone-500 mt-4">Nota: Eficiência refere-se à ausência de redundância.</p>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="bg-white rounded-xl p-5 border border-stone-200 shadow-sm hover:shadow-md transition-shadow">
+                            <h4 class="font-bold text-teal-700 flex justify-between"><span>Integridade</span> <span>SGBD Vence</span></h4>
+                            <p class="text-sm text-stone-600 mt-2">Planilhas aceitam qualquer dado em qualquer célula. SGBDs usam restrições (Constraints) e tipagem rigorosa para garantir a qualidade da informação.</p>
+                        </div>
+                        <div class="bg-white rounded-xl p-5 border border-stone-200 shadow-sm hover:shadow-md transition-shadow">
+                            <h4 class="font-bold text-teal-700 flex justify-between"><span>Volume</span> <span>SGBD Vence</span></h4>
+                            <p class="text-sm text-stone-600 mt-2">O Excel trava ao se aproximar de 1 milhão de linhas. Um SGBD como o MySQL lida com milhões ou bilhões de registros de forma otimizada.</p>
+                        </div>
+                        <div class="bg-white rounded-xl p-5 border border-stone-200 shadow-sm hover:shadow-md transition-shadow">
+                            <h4 class="font-bold text-teal-700 flex justify-between"><span>Concorrência</span> <span>SGBD Vence</span></h4>
+                            <p class="text-sm text-stone-600 mt-2">Planilhas geram conflito com múltiplos usuários. Bancos de dados são desenhados para dezenas de conexões simultâneas nativamente.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="requisitos" class="view-section hidden">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-extrabold text-stone-800 tracking-tight">Levantamento de Requisitos</h2>
+                    <p class="mt-2 text-lg text-stone-600">Aprenda a ouvir o cliente e extrair as informações necessárias para a modelagem lógica.</p>
+                </div>
+
+                <div class="bg-white rounded-2xl p-8 shadow-sm border border-stone-200 mb-8">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <div class="bg-stone-50 p-4 rounded-lg border border-stone-100 text-center">
+                            <div class="text-3xl mb-2">&#128193;</div>
+                            <h4 class="font-bold text-stone-800">Entidades</h4>
+                            <p class="text-sm text-stone-500">Substantivos. Coisas sobre as quais guardamos dados.</p>
+                        </div>
+                        <div class="bg-stone-50 p-4 rounded-lg border border-stone-100 text-center">
+                            <div class="text-3xl mb-2">&#128269;</div>
+                            <h4 class="font-bold text-stone-800">Atributos</h4>
+                            <p class="text-sm text-stone-500">Características. O que descreve a entidade.</p>
+                        </div>
+                        <div class="bg-stone-50 p-4 rounded-lg border border-stone-100 text-center">
+                            <div class="text-3xl mb-2">&#9881;</div>
+                            <h4 class="font-bold text-stone-800">Processos</h4>
+                            <p class="text-sm text-stone-500">Verbos. O que acontece no sistema.</p>
+                        </div>
+                    </div>
+
+                    <h3 class="text-xl font-bold text-stone-800 mb-4">Treinamento Prático: O Caso de Uso</h3>
+                    <p class="text-stone-600 mb-4">Leia o relato do cliente abaixo. Clique no botão para analisar e classificar as palavras-chave do texto estruturalmente.</p>
+                    
+                    <div class="bg-stone-100 p-6 rounded-xl text-lg leading-relaxed border border-stone-200 font-serif text-stone-700" id="texto-requisito">
+                        "O <span class="req-word" data-type="entidade">cliente</span> <span class="req-word" data-type="processo">liga</span> e nós informamos <span class="req-word" data-type="atributo">nome</span>, <span class="req-word" data-type="atributo">cidade</span> e <span class="req-word" data-type="atributo">telefone</span>. O <span class="req-word" data-type="entidade">pedido</span> <span class="req-word" data-type="processo">registra</span> os <span class="req-word" data-type="entidade">produtos</span> e <span class="req-word" data-type="atributo">quantidades</span> solicitadas. Além disso, o <span class="req-word" data-type="entidade">vendedor</span> <span class="req-word" data-type="processo">ganha</span> uma <span class="req-word" data-type="atributo">comissão</span> padrão de 5%."
+                    </div>
+
+                    <div class="mt-6 flex flex-wrap gap-4 items-center">
+                        <button onclick="revelarRequisitos()" id="btn-revelar" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">
+                            Analisar Texto
+                        </button>
+                        <div id="legenda-requisitos" class="hidden flex gap-4 text-sm">
+                            <span class="highlight-entidade shadow-sm">Entidades</span>
+                            <span class="highlight-atributo shadow-sm">Atributos</span>
+                            <span class="highlight-processo shadow-sm">Processos</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="modelagem" class="view-section hidden">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-extrabold text-stone-800 tracking-tight">Modelagem Relacional e Cardinalidade</h2>
+                    <p class="mt-2 text-lg text-stone-600">Transformando os requisitos em um Diagrama Entidade-Relacionamento (DER). O papel do Arquiteto de Dados.</p>
+                </div>
+
+                <div class="bg-teal-900 text-teal-50 p-6 rounded-2xl mb-8 shadow-md">
+                    <h3 class="text-xl font-bold mb-4 text-white">Regras de Cardinalidade (O Segredo do Relacional)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="font-bold text-teal-300 text-lg">1:N (Um para Muitos)</h4>
+                            <p class="text-sm mt-2 opacity-90">Um Cliente faz muitos Pedidos. A Chave Estrangeira (FK) sempre migra para a tabela do lado "Muitos" (Pedidos recebe o id_cliente).</p>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-amber-400 text-lg">N:M (Muitos para Muitos)</h4>
+                            <p class="text-sm mt-2 opacity-90">Um Pedido tem muitos Produtos e um Produto está em muitos Pedidos. <strong>Atenção:</strong> Isso exige a criação de uma Tabela Associativa!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 class="text-2xl font-bold text-stone-800 mb-6">Estrutura Inicial Proposta (DER)</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="bg-white border-t-4 border-t-teal-500 rounded-lg shadow-sm overflow-hidden">
+                        <div class="bg-stone-100 p-3 font-bold text-stone-800 text-center border-b border-stone-200">CLIENTES</div>
+                        <ul class="p-4 text-sm text-stone-600 space-y-2 font-mono">
+                            <li class="font-bold text-amber-600">PK id_cliente (INT)</li>
+                            <li> nome </li>
+                            <li> email </li>
+                            <li> telefone </li>
+                            <li> cidade </li>
+                            <li> estado </li>
+                            <li> cep </li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-white border-t-4 border-t-teal-500 rounded-lg shadow-sm overflow-hidden">
+                        <div class="bg-stone-100 p-3 font-bold text-stone-800 text-center border-b border-stone-200">VENDEDORES</div>
+                        <ul class="p-4 text-sm text-stone-600 space-y-2 font-mono">
+                            <li class="font-bold text-amber-600">PK id_vendedor (INT)</li>
+                            <li> nome </li>
+                            <li> email </li>
+                            <li> regiao </li>
+                            <li> comissao_pct </li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-white border-t-4 border-t-teal-500 rounded-lg shadow-sm overflow-hidden">
+                        <div class="bg-stone-100 p-3 font-bold text-stone-800 text-center border-b border-stone-200">PRODUTOS</div>
+                        <ul class="p-4 text-sm text-stone-600 space-y-2 font-mono">
+                            <li class="font-bold text-amber-600">PK id_produto (INT)</li>
+                            <li> nome </li>                            
+                            <li> categoria </li>
+                            <li> preco_custo </li>
+                            <li> preco_venda </li>                            
+                        </ul>
+                    </div>
+
+                    <div class="bg-white border-t-4 border-t-indigo-500 rounded-lg shadow-sm overflow-hidden lg:col-start-1 lg:col-end-3">
+                        <div class="bg-indigo-50 p-3 font-bold text-indigo-900 text-center border-b border-indigo-100 flex justify-between items-center px-4">
+                            <span>PEDIDOS</span>
+                            <span class="text-xs bg-indigo-200 text-indigo-800 px-2 py-1 rounded">Tabela de Evento</span>
+                        </div>
+                        <div class="p-4 flex flex-col md:flex-row gap-4">
+                            <ul class="text-sm text-stone-600 space-y-2 font-mono flex-1">
+                                <li class="font-bold text-amber-600">PK id_pedido (INT)</li>
+                                <li> data_pedido </li>
+                                <li> data_entrega </li>
+                                <li> status </li>
+                                <li> frete </li>
+                            </ul>
+                            <ul class="text-sm text-stone-600 space-y-2 font-mono flex-1 bg-stone-50 p-2 rounded">
+                                <li class="text-teal-700 italic">FK id_cliente &rarr; (CLIENTES)</li>
+                                <li class="text-teal-700 italic">FK id_vendedor &rarr; (VENDEDORES)</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="bg-white border-t-4 border-t-rose-500 rounded-lg shadow-sm overflow-hidden">
+                        <div class="bg-rose-50 p-3 font-bold text-rose-900 text-center border-b border-rose-100">
+                            ITENS_PEDIDO<br>
+                            <span class="text-xs font-normal">Tabela Associativa (N:M)</span>
+                        </div>
+                        <ul class="p-4 text-sm text-stone-600 space-y-2 font-mono bg-stone-50">
+                            <li class="text-teal-700 italic">FK id_pedido &rarr; (PEDIDOS)</li>
+                            <li class="text-teal-700 italic">FK id_produto &rarr; (PRODUTOS)</li>
+                            <li class="mt-2 pt-2 border-t border-stone-200">quantidade (INT)</li>
+                            <li> quantidade </li>
+                            <li> preco_unitario </li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <section id="desafio" class="view-section hidden">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-extrabold text-stone-800 tracking-tight">Missão do Squad</h2>
+                    <p class="mt-2 text-lg text-stone-600">Hora de colocar a mão na massa no MySQL Workbench e preparar a entrega da semana.</p>
+                </div>
+
+                <div class="bg-white rounded-2xl p-8 shadow-sm border border-stone-200">
+                    <div class="flex items-center gap-4 border-b border-stone-200 pb-6 mb-6">
+                        <div class="bg-stone-900 text-white w-12 h-12 flex items-center justify-center rounded-full font-bold text-xl">
+                            &#9874;
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-stone-800">Prática Guiada</h3>
+                            <p class="text-stone-500">Criação do Modelo Lógico</p>
+                        </div>
+                    </div>
+
+                    <ul class="space-y-4 text-stone-700 mb-8">
+                        <li class="flex items-start gap-3">
+                            <span class="bg-teal-100 text-teal-800 w-6 h-6 flex items-center justify-center rounded-full text-sm font-bold shrink-0 mt-0.5">1</span>
+                            <span>Abra o <strong>MySQL Workbench</strong> e vá em <code class="bg-stone-100 px-2 rounded">File &rarr; New Model</code>.</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="bg-teal-100 text-teal-800 w-6 h-6 flex items-center justify-center rounded-full text-sm font-bold shrink-0 mt-0.5">2</span>
+                            <span>Adicione um diagrama clicando em <code class="bg-stone-100 px-2 rounded">Add Diagram</code>.</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="bg-teal-100 text-teal-800 w-6 h-6 flex items-center justify-center rounded-full text-sm font-bold shrink-0 mt-0.5">3</span>
+                            <span>Crie as 5 tabelas discutidas na modelagem com os tipos de dados corretos (INT para IDs, VARCHAR para textos, DECIMAL(10,2) para valores).</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="bg-teal-100 text-teal-800 w-6 h-6 flex items-center justify-center rounded-full text-sm font-bold shrink-0 mt-0.5">4</span>
+                            <span>Conecte as tabelas usando a ferramenta de relacionamento <code class="bg-stone-100 px-2 rounded">1:N</code>. Lembre-se que a FK fica do lado do 'N'.</span>
+                        </li>
+                    </ul>
+
+                    <div class="bg-amber-50 border border-amber-200 rounded-xl p-6">
+                        <h4 class="font-bold text-amber-900 mb-4 flex items-center gap-2">
+                            <span>&#128203;</span> Entregáveis da Semana
+                        </h4>
+                        <div class="space-y-3">
+                            <label class="flex items-center gap-3 cursor-pointer group">
+                                <input type="checkbox" class="w-5 h-5 text-teal-600 rounded border-stone-300 focus:ring-teal-500 transition duration-150 ease-in-out">
+                                <span class="text-stone-700 group-hover:text-stone-900">O arquivo <code class="bg-white px-1 border border-stone-200 rounded">.mwb</code> ou imagem exportada do DER completo.</span>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer group">
+                                <input type="checkbox" class="w-5 h-5 text-teal-600 rounded border-stone-300 focus:ring-teal-500 transition duration-150 ease-in-out">
+                                <span class="text-stone-700 group-hover:text-stone-900">Justificativa escrita: Por que a tabela <code class="bg-white px-1 border border-stone-200 rounded">ITENS_PEDIDO</code> foi necessária?</span>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer group">
+                                <input type="checkbox" class="w-5 h-5 text-teal-600 rounded border-stone-300 focus:ring-teal-500 transition duration-150 ease-in-out">
+                                <span class="text-stone-700 group-hover:text-stone-900"><strong class="text-amber-700">Bônus:</strong> Adição de uma tabela de <code class="bg-white px-1 border border-stone-200 rounded">CATEGORIAS</code> vinculada aos produtos.</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <script>
+        const appState = {
+            currentSection: 'intro',
+            chartInstance: null
+        };
+
+        function navigate(sectionId) {
+            document.querySelectorAll('.view-section').forEach(el => {
+                el.classList.add('hidden');
+                el.classList.remove('fade-in', 'block');
+            });
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+
+            const targetSection = document.getElementById(sectionId);
+            targetSection.classList.remove('hidden');
+            targetSection.classList.add('fade-in', 'block');
+            document.getElementById(`btn-${sectionId}`).classList.add('active');
+
+            appState.currentSection = sectionId;
+
+            if (sectionId === 'analise') {
+                renderChart();
+            }
+        }
+
+        function renderChart() {
+            if (appState.chartInstance) return;
+
+            const ctx = document.getElementById('comparisonChart').getContext('2d');
+            appState.chartInstance = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['Eficiência (S/ Redundância)', 'Integridade Estrutural', 'Volume de Dados', 'Concorrência (Usuários)'],
+                    datasets: [
+                        {
+                            label: 'Planilha (Excel)',
+                            data: [2, 2, 3, 1],
+                            backgroundColor: 'rgba(244, 63, 94, 0.2)', // Rose 500
+                            borderColor: 'rgba(244, 63, 94, 1)',
+                            pointBackgroundColor: 'rgba(244, 63, 94, 1)',
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'Banco de Dados (SGBD)',
+                            data: [10, 10, 10, 10],
+                            backgroundColor: 'rgba(13, 148, 136, 0.2)', // Teal 600
+                            borderColor: 'rgba(13, 148, 136, 1)',
+                            pointBackgroundColor: 'rgba(13, 148, 136, 1)',
+                            borderWidth: 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: { color: 'rgba(0, 0, 0, 0.1)' },
+                            grid: { color: 'rgba(0, 0, 0, 0.1)' },
+                            pointLabels: {
+                                font: { family: 'Inter', size: 12 },
+                                color: '#57534e'
+                            },
+                            ticks: {
+                                display: false,
+                                min: 0,
+                                max: 10
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: { family: 'Inter' },
+                                color: '#292524'
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.raw;
+                                    let text = 'Baixa';
+                                    if(value > 4 && value <= 7) text = 'Média';
+                                    if(value > 7) text = 'Alta';
+                                    return `${context.dataset.label}: ${text} Capacidade`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function revelarRequisitos() {
+            const words = document.querySelectorAll('.req-word');
+            const btn = document.getElementById('btn-revelar');
+            const legenda = document.getElementById('legenda-requisitos');
+            
+            let isRevealed = btn.innerText === "Ocultar Análise";
+
+            words.forEach(word => {
+                const type = word.getAttribute('data-type');
+                if (!isRevealed) {
+                    word.classList.add(`highlight-${type}`);
+                } else {
+                    word.classList.remove(`highlight-${type}`);
+                }
+            });
+
+            if (!isRevealed) {
+                btn.innerText = "Ocultar Análise";
+                btn.classList.replace('bg-teal-600', 'bg-stone-500');
+                btn.classList.replace('hover:bg-teal-700', 'hover:bg-stone-600');
+                legenda.classList.remove('hidden');
+            } else {
+                btn.innerText = "Analisar Texto";
+                btn.classList.replace('bg-stone-500', 'bg-teal-600');
+                btn.classList.replace('hover:bg-stone-600', 'hover:bg-teal-700');
+                legenda.classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+</html>
